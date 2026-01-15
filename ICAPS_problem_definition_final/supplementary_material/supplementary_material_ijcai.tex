@@ -1,0 +1,403 @@
+%%%% ijcai25.tex
+
+\typeout{IJCAI--25 Instructions for Authors}
+
+% These are the instructions for authors for IJCAI-25.
+
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
+% The file ijcai25.sty is a copy from ijcai22.sty
+% The file ijcai22.sty is NOT the same as previous years'
+\usepackage{ijcai25}
+
+% Use the postscript times font!
+\usepackage{times}
+\usepackage{soul}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{makecell}
+\usepackage{algorithmic}
+\usepackage[switch]{lineno}
+
+
+\usepackage{multirow}
+\usepackage{amsmath,amssymb} 
+\usepackage{comment}
+\usepackage{xspace}
+\usepackage{enumitem}
+%\usepackage{hyperref}
+\newtheorem{define}{Definition}
+\newcommand{\attr}[1]{\textbf{#1}}
+\newcommand{\rimsTool}{$\textsc{RIMS}{\mathsf{_{Tool}}}$\xspace}
+\usepackage[dvipsnames]{xcolor} 
+\newcommand{\rims}{$\textsc{RIMS}$\xspace}
+\newcommand\btext[1]{{\color{blue}{#1}}}
+\newcommand\rtext[1]{{\color{red}{#1}}}
+\newcommand\massi[1]{{\color{orange}{#1}}}
+%\usepackage{bbding}
+\newcommand{\act}[1]{\textsf{\footnotesize #1}}
+
+
+\usepackage{xcolor} 
+\usepackage[table,xcdraw]{xcolor}
+
+% Comment out this line in the camera-ready submission
+\linenumbers
+
+\urlstyle{same}
+
+% the following package is optional:
+%\usepackage{latexsym}
+
+% See https://www.overleaf.com/learn/latex/theorems_and_proofs
+% for a nice explanation of how to define new theorems, but keep
+% in mind that the amsthm package is already included in this
+% template and that you must *not* alter the styling.
+\newtheorem{example}{Example}
+\newtheorem{theorem}{Theorem}
+
+% Following comment is from ijcai97-submit.tex:
+% The preparation of these files was supported by Schlumberger Palo Alto
+% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
+% Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
+% preparation.
+
+% These instructions can be modified and used in other conferences as long
+% as credit to the authors and supporting agencies is retained, this notice
+% is not changed, and further modification or reuse is not restricted.
+% Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
+% contacts for providing assistance without their prior permission.
+
+% To use for other conferences, change references to files and the
+% conference appropriate and use other authors, contacts, publishers, and
+% organizations.
+% Also change the deadline and address for returning papers and the length and
+% page charge instructions.
+% Put where the files are available in the appropriate places.
+
+
+% PDF Info Is REQUIRED.
+
+% Please leave this \pdfinfo block untouched both for the submission and
+% Camera Ready Copy. Do not include Title and Author information in the pdfinfo section
+\pdfinfo{
+/TemplateVersion (IJCAI.2025.0)
+}
+
+\title{Appendix - Supplementary Material}
+
+
+% Multiple author syntax (remove the single-author syntax above and the \iffalse ... \fi here)
+\iffalse
+\author{
+First Author$^1$
+\and
+Second Author$^2$\and
+Third Author$^{2,3}$\And
+Fourth Author$^4$\\
+\affiliations
+$^1$First Affiliation\\
+$^2$Second Affiliation\\
+$^3$Third Affiliation\\
+$^4$Fourth Affiliation\\
+\emails
+\{first, second\}@example.com,
+third@other.example.com,
+fourth@example.com
+}
+\fi
+
+\begin{document}
+
+\maketitle
+
+
+\section*{Supplementary material}
+    \subsection*{Proofs}
+
+We prove Proposition 1 of our approach, i.e., that $q_u$ also provides a lower bound with the introduction of resource calendars.
+
+%Full proof of Proposition 1.
+\begin{proof}
+We build the proof on the result of~\cite{beck2007proactive}, who established a lower bound for RCPSPs that do not account for resource unavailability. The core argument relies on the ability to represent RCPSP constraints as Positive Precedence Expressions (PPEs).
+Specifically, the constraints of an RCPSP can be expressed as a conjunction of PPEs~(\cite{beck2007proactive}):
+\begin{enumerate}
+    \item \textbf{Precedence Constraints (\( \phi \))}: Precedence relationships between activities \( a_i \) and \( a_j \) are represented as primitive precedence expressions \( \texttt{before}(i, j) \). Let \( \phi \) denote the conjunction of all such precedence constraints.
+
+    \item \textbf{Resource Constraints (\( \psi \))}: Resource constraints can be represented using forbidden sets. A forbidden set \( H \subseteq \mathcal{A} \) consists of activities whose simultaneous execution exceeds the capacity of a resource \( r \), $C_r$. Resource constraints are satisfied if, for all \( H \in F \), there exist two activities \( a_i, a_j \in H \) such that \( \texttt{before}(i, j) \) holds. This is expressed as:
+    \[
+    \psi = \bigwedge_{H \in F} \bigvee_{a_i, a_j \in H, i \neq j} \texttt{before}(i, j).
+    \]
+\end{enumerate} Combining these, the constraints of an RCPSP are represented as \( \phi \wedge \psi \), which is a conjunction of PPEs. In BPSP, resource unavailability introduces additional constraints:
+each resource \( r \) has an availability calendar \( v_{r,t} \), where \( v_{r,t} = 1 \) if \( r \) is available at time \( t \), and \( 0 \) otherwise.
+To incorporate resource unavailability, we redefine and extend the notion of forbidden sets:
+\begin{enumerate}
+    \item Capacity forbidden sets \( H \) are defined as in RCPSPs, representing sets of activities whose simultaneous execution exceeds the capacity of a resource \( r \).
+    \item For resource unavailability, we extend \(H\) with additional constraints for each resource \( r \) and time \( t \) where \( v_{r,t} = 0 \). The extended forbidden sets, denoted $H'$, ensure that no activities requiring \( r \) overlap during unavailable periods.
+\end{enumerate} The resource constraints with unavailability can then be expressed as:
+\[
+\psi_u = \bigwedge_{H' \in F'} \bigvee_{a_i, a_j \in H', i \neq j} \texttt{before}(i, j),
+\]
+where \( F' \) is the extended set of forbidden sets that includes both capacity constraints and unavailability constraints.
+
+The combined constraints for BPSP, including resource unavailability, can now be expressed as:
+\[
+\phi \wedge \psi_u,
+\]
+where \( \phi \) represents precedence constraints, and \( \psi_u \) represents resource constraints, including unavailability. Each component is a conjunction of PPEs, ensuring that the overall problem retains the PPE structure.
+
+Since BPSP constraints can be expressed as a conjunction of PPEs, the results from~\cite{beck2007proactive} apply, and \( q_U \) provides a lower bound on the stochastic Makespan.
+
+\end{proof} 
+
+
+
+
+\section*{Additional results and plots}
+
+In this section, we report further results and plots, that extend the Evaluation Section of the paper. In particular, the second set of experiments involves the use of predictive models to estimate activity durations in both synthetic and real datasets. The well-known complexity of the BPSP process, specifically the stochastic nature of activity durations influenced by human behavior and the time-varying availability of resources, has led to several studies in the Process Mining field~\cite{CamargoDR22,Meneghello_2024}. These studies explore hybrid simulation models that integrate predictive models to improve the accuracy of representing real processes. Accordingly, we define the second set of experiments to empirically demonstrate that our approach remains effective in the presence of predictive models.
+
+
+\subsubsection{Synthetic data Experiment}
+
+Table~\ref{tab:resultSynthetic_appendix} provides an extended overview of the first set of experiments (Table 2 of the paper). 
+It reports, for each problem, the minimum Makespan obtained with the CP solver ($M^*_{C}$), the probabilistic minimum Makespan ($M^*_{\alpha}$), along with the corresponding mean ($\mu^*_{\alpha}$) and standard deviation ($\sigma^*_{\alpha}$).  
+Moreover, Table~\ref{tab:resultSynthetic_appendix} presents the results for three additional problems of varying sizes: \{($20 \times 15$), ($30 \times 15$), and ($40 \times 20$)\}. All the benchmarks are retrieved from the work~\cite{beanchmarks}, which provides well-known job scheduling problems, along with a parser and utility functions to handle them.
+
+Figure~\ref{fig:q3_results} shows the deterministic solutions obtained using the CP solver with $q_C$, namely $M_C$, and the corresponding performance over $1000$ simulations, expressed by $M_\alpha$ and the average Makespan. In contrast, Figure~\ref{fig:q1_results} presents the same results but computed with $q_U$ on the same benchmark (\act{medium}($20 \times 20$) without resource calendars). From Figures~\ref{fig:q3_results} and \ref{fig:q1_results}, it is evident that $q_U$ ensures a lower bound, which is not always guaranteed with $q_C$. However, the latter is capable of producing a probabilistic Makespan that is closer to the deterministic one and achieves a smaller probabilistic Makespan with fewer solutions, given the same time limit for the CP solver to retrieve the solutions.
+
+ 
+For the second set of experiments, we extend the synthetic data by generating three additional problems with the same structure, where activity durations depend on the type of case. Specifically, for each uncertainty level and the size of resources, described in Table~\ref{tab:resultSynthetic_prediction_appendix}, we generate an event log of $1000$ cases. Every generated case is labelled with an attribute representing three possible categories of hospital patients: the rare \act{red}, which results in increased activity durations; \act{white}, which leads to durations closer to the mean; and \act{yellow}, which falls between the two.
+After splitting the generated event logs, we use the training set to build a Random Regression Model capable of predicting the mean and standard deviation of an activity, based on the activity to be performed, the assigned resource and the patient category. Finally, from the test set, we sample $n$ cases, following the sizes specified in Table~\ref{tab:resultSynthetic_prediction_appendix}, and define the BPSP problem, estimating the mean and standard deviation of each activity using the trained model.
+
+Table~\ref{tab:resultSynthetic_prediction_appendix} pertains to the second set of synthetic experiments, where predictive models are utilized to estimate the mean and the standard deviation of each activity in the problems. 
+Table~\ref{tab:resultSynthetic_prediction_appendix} provides the same information as Table~\ref{tab:resultSynthetic_appendix}, including $M^*_{C}$, $M^*_{\alpha}$, $\mu^*_{\alpha}$, and $\sigma^*_{\alpha}$, for the \act{small}, \act{medium}, and \act{big} problems instance with case-dependent activity durations. The results in Table~\ref{tab:resultSynthetic_prediction_appendix} are similar to those from the first set of experiments where the activity durations are independent, demonstrating that our approach effectively optimizes the times even in the presence of case-dependent activity durations.
+
+    \begin{table}[tb]
+    \centering
+    \resizebox{.99\columnwidth}{!}{
+    \begin{tabular}{l@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}}
+        \toprule
+        \multirow{2}{*}{\textbf{Days}} & \textbf{Av.} & \textbf{Av. } & \textbf{Av.} & \textbf{Av.} & \textbf{Max} & \textbf{Av.} \\
+         & \textbf{\#Cases} & \textbf{ \#Activities} & \textbf{ \#Resources} & \textbf{\% Imp.} & \textbf{\% Imp.} & \textbf{Imp.} \\
+        \midrule
+        \multirow{2}{*}{\act{Small}} &  \multirow{2}{*}{98}  &  \multirow{2}{*}{136} & \multirow{2}{*}{33} & -1.2\% & -6\% & -14min \\
+                                      &      &      &    & \cellcolor{blue!20} -0.8\% & \cellcolor{blue!20} -12\% & \cellcolor{blue!20} -9min \\
+        \midrule
+        \multirow{2}{*}{\act{Medium}} &  \multirow{2}{*}{717}  &  \multirow{2}{*}{1242} & \multirow{2}{*}{237} & -4.8\% & -12\%& -69min \\
+         &      &      &    & \cellcolor{blue!20} -4.8\% & \cellcolor{blue!20} -16\% & \cellcolor{blue!20} -63min \\
+        \midrule
+        \multirow{2}{*}{\act{Big}} &  \multirow{2}{*}{848}  &  \multirow{2}{*}{1505} & \multirow{2}{*}{266}  & -5.9\% & -14\% & -87min \\
+         &      &      &   & \cellcolor{blue!20} -7.1\% & \cellcolor{blue!20} -33\% & \cellcolor{blue!20} -95min \\
+        \bottomrule
+    \end{tabular}
+    }
+    \caption{The days are divided into 3 groups based on 33rd and 67th percentiles. The blue lines indicate the values for the experiments with the prediction models.}
+\label{tab:results_hospital}
+\end{table}
+
+
+
+\begin{table*}[h]
+\centering
+\begin{tabular}{l@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.07in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.04in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.04in}}
+\toprule
+\textbf{Size} & \textbf{Unc.} & \textbf{$q_{C}$} & \multicolumn{5}{c}{Sets} & \multicolumn{5}{c}{Calendars} &
+ \\
+& \textbf{Level} & & $M_{C}$ & $M^*_{\alpha}$ & $\mu^*_{\alpha}$ & $\sigma^*_{\alpha}$ & NP & $M_{C}$ & $M^*_{\alpha}$ & $\mu^*_{\alpha}$ & $\sigma^*_{\alpha}$ &  NP \\
+\midrule
+  \multirow{3}{*}{10 X 10} & 0.1 &  0.333 & 2513 & 2567.410 & 2488.567 & 49.934 & 1.02 & 13438 & 12028.185 & 11986.353 & 36.738 & 0.89\\
+  & 0.5 & 0.416 & 2786 & 2893.766 & 2726.894 & 101.539 & 1.04 & 13548 & 12925.965 & 12887.499 & 108.541 & 0.95 \\
+  & 1 & 0.430 & 2565 & 2584.522 & 2491.293 & 57.164 & 1.00 & 13205 & 12892.133 & 12535.345 & 157.219 & 0.97\\
+  \midrule
+  
+ \multirow{3}{*}{20 X 20} & 0.1 &  0.246 & 5093 & 5307.425 & 5189.268 & 72.655 & 1.04 & 24501 & 24525.484 & 24465.015 & 105.016 & 1.00 \\
+  & 0.5 & 0.263 & 5187 & 5468.917 & 5256.568 & 126.306  & 1.05 & 25148 & 25176.667 & 25038.096 & 356.336 & 1.00\\
+  & 1 & 0.25 & 5465 & 6168.015 & 5798.778 & 215.886 & 1.12 & 37135 & 35389.230 & 34234.229 & 1060.339 & 0.95 \\
+  \midrule
+
+\multirow{3}{*}{50 X 20} & 0.1 & 0.299 & 3892 & 3941.377 & 3884.461 & 34.963 & 1.01 & 23553 & 22334.987 & 21330.291 & 613.169 & 0.94 \\
+  & 0.5 & 0.321 & 4502 & 4819.154 & 4639.155 & 109.468 & 1.07 & 23765 & 22703.358 & 22313.583 & 297.112 & 0.95\\
+  & 1 & 0.329 & 4260 & 4304.671 & 4253.562 & 37.662 & 1.01 & 20943 & 20805.290 & 20785.323 & 11.330 & 0.99 \\
+  
+  \bottomrule
+\end{tabular}
+\caption{Results on JSP benchmarks with varying sizes, levels of uncertainty, and case-dependent activity durations.}
+%\caption{Cycle Time Distribution Distance and Conformance score}
+\label{tab:resultSynthetic_prediction_appendix}
+\end{table*}
+
+
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/PI_metrics_predictions.png}
+\caption{$PI$ metrics on all days that make up the DayHospital data test set with the integration of the predictive models. The colors of the points in the graph represent the amount of activity on that day.}
+\label{fig:improvements_real_dataset_predictions}
+\end{figure}
+
+
+\subsubsection{DayHospital Experiment}
+
+We extend the results reported in the paper by adding Figure~\ref{fig:improvements_real_dataset_distributions} showing the trend of $PI$ metrics respect to the number of activities treated in BPSP problem defined over DayHospital data. Specifically, Figure~\ref{fig:improvements_real_dataset_distributions} emphasizes, as we expected, that the main improvements in the global Makespan are obtained on days with a high presence of activities. Furthermore, we can observe that an increase in Makespan, given by a positive number of $PI$, has an impact on at most 2\% of the actual Makespan.
+
+\begin{figure}[!b]
+\centering
+\includegraphics[width=\columnwidth]{images/PI_metrics_distributions.png}
+\caption{$PI$ metrics on all days that make up the DayHospital data test set. The colors of the points in the graph represent the amount of activity on that day. }
+\label{fig:improvements_real_dataset_distributions}
+\end{figure}
+
+Similarly to the second set of synthetic experiments, we conduct another experiment using DayHospital data, where the mean and standard deviation of each activity in the test set are estimated using a predictive model.Specifically, we train a Random Forest Regressor on the entire year (2021) of DayHospital data, capable of learning the mean and standard deviation of a normal distribution for activity durations. The predictive model is then used to estimate the activity durations for the subsequent five months (January–May 2022). Contrary to the generated synthetic data, we lack information about the patients treated for privacy reasons. Therefore, we use as input features the preceding activities performed, the resources involved, and temporal features such as the day of the week, the month, and the hour of the day. This experiment allows us to assess our approach when activity durations may depend on various temporal and sequential factors.
+
+Table~\ref{tab:results_hospital} reports the results obtained with the predictive models in comparison with the first experiments with DayHospital data. From the blue lines in Table~\ref{tab:results_hospital} we can observe that our approach still improves the global makespan but exhibits more fluctuations and contains some outliers, as shown in  Figure~\ref{fig:improvements_real_dataset_predictions}.
+
+\begin{comment}
+    \begin{table}[tb]
+    \centering
+    \resizebox{.80\columnwidth}{!}{
+    \begin{tabular}{c|cc|cc|cc}
+        \toprule
+        \textbf{Un. Level} & 0.1 & 0.1 & 0.5 & 0.5 & 1 & 1 \\
+        \midrule
+        \textbf{Calendar} & x & \checkmark & x & \checkmark & x & \checkmark \\
+        \midrule \midrule
+        \multirow{2}{*}{\act{Small}} &  1.00  &  1.00 & 1.03 & 1.00 & 1.13 & 1.13 \\
+        &  \cellcolor{blue!20} 1.02  &  \cellcolor{blue!20}  0.89  &  \cellcolor{blue!20} 1.04 & \cellcolor{blue!20} 0.95 & \cellcolor{blue!20} 1.00 & \cellcolor{blue!20} 0.97 \\
+        \midrule
+        \multirow{2}{*}{\act{Medium}} &  0.99  &  1.00 & 1.03 & 1.00 & 1.10 & 1.10 \\
+        &  \cellcolor{blue!20} 1.04  &  \cellcolor{blue!20}  1.00  &  \cellcolor{blue!20} 1.05 & \cellcolor{blue!20} 1.00 & \cellcolor{blue!20} 1.13 & \cellcolor{blue!20} 0.95 \\
+        \midrule
+        \multirow{2}{*}{\act{Big}} &  1.09  &  1.00 & 1.07 & 1.07 & 1.12 & 1.18 \\
+        &  \cellcolor{blue!20} 1.01  &  \cellcolor{blue!20}  0.94 &  \cellcolor{blue!20} 1.07 & \cellcolor{blue!20} 0.95 & \cellcolor{blue!20} 1.01 & \cellcolor{blue!20} 0.99 \\
+        \bottomrule
+    \end{tabular}
+    }
+    \caption{The Normalized Probabilistic Makespans (NPM) are presented for each size, with and without the resource calendars. The blue lines indicate the results of the experiments with the prediction models.}
+\label{tab:results_synthetic}
+\end{table}
+\end{comment}
+
+
+
+\subsection*{Technical material}
+
+\subsubsection{Code for reproducing experiments} The \emph{IJCAI2025-Proactive-DataDriven-Scheduling-Business-Process} repository\footnote{https://github.com/francescameneghello/IJCAI2025-Proactive-DataDriven-Scheduling-Business-Process/tree/main} contains all the code used to reproduce the experiments, including the instructions for the environment set up. The instructions are reported in the file \emph{README.md}, detailing all the steps and commands for installation of all the packages detailed above.
+
+
+\subsubsection*{Datasets}
+
+The repository also contains the synthetic dataset, while real data is not available due to privacy reasons.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{images/q3_results.png}
+\caption{Comparison of all $M_C$ solutions returned by the CP solver with $q_C$, along with their corresponding $M_{\alpha}$ values and the \emph{Average} computed over 1,000 simulations, for the synthetic \act{medium} problem without calendars for each level of uncertainty ($0.1, 0.5, 1.0$). }
+\label{fig:q3_results}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{images/q1_results.png}
+\caption{Comparison of all $M_U$ solutions returned by the CP solver with $q_U$, along with their corresponding $M_{\alpha}$ values and the \emph{Average} computed over 1,000 simulations, for the synthetic \act{medium} problem without calendars for each level of uncertainty ($0.1, 0.5, 1.0$).}
+\label{fig:q1_results}
+\end{figure*}
+
+
+
+\begin{table*}[h]
+\centering
+\scalebox{0.95}{
+\begin{tabular}{c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.07in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.04in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.05in}c@{\hskip 0.04in}}
+\toprule
+\textbf{Name} & \textbf{Size} & \textbf{Unc.} & \textbf{$q_{C}$} & \multicolumn{5}{c}{Sets} & \multicolumn{5}{c}{Calendars} &
+ \\
+& & \textbf{Level} & & $M^*_{C}$ & $M^*_{alpha}$ & $\mu^*_{\alpha}$ & $\sigma^*_{\alpha}$ &  NP & $M^*_{C}$ & $M^*_{alpha}$ & $\mu^*_{\alpha}$ & $\sigma^*_{\alpha}$ & NP \\
+\midrule
+\multirow{3}{*}{abz5} & \multirow{3}{*}{10 X 10} & 0.1 & 0.623 & 1264 & 1267.117 & 1247.123 & 12.605 & 1.00 & 6306 & 6318.929 & 6311.387 & 34.791 & 1.00 \\
+  & & 0.5 & 0.612 & 1412 & 1461.083 & 1375.390 & 55.351 & 1.03 & 6522 & 6557.094 & 6530.092 & 309.877 & 1.00 \\
+  & & 1 & 0.582 & 1606 & 1818.667 & 1634.942 & 118.814 & 1.13 & 10592 & 12012.313 & 10405.540 & 1254.506 & 1.13\\
+\midrule
+
+\multirow{3}{*}{abz7} & \multirow{3}{*}{20 X 15} & 0.1 & 0.617 & 857 & 984.894 & 920.013 & 41.663 & 1.15 & 10532 & 10544.230 & 10550.919 & 181.384 & 1.00\\
+  & & 0.5 & 0.631 & 876 & 985.649 & 917.516 & 40.973 & 1.12 & 10845 & 10880.421 & 10884.615 & 261.896 & 1.00\\
+  & & 1 & 0.592 & 870 & 985.131 & 911.594 & 42.759 & 1.13 & 10584 & 11672.917 & 10672.633 & 340.185 & 1.10\\
+  \midrule
+
+\multirow{3}{*}{\makecell{cscmax \\ 20\_20\_2}} & \multirow{3}{*}{20 X 20} & 0.1 & 0.726 & 4088 & 4079.711 & 4041.146 & 24.760 & 0.99 & 17305 & 17310.267 & 17305.266 & 136.515 & 1.00\\
+  & & 0.5 & 0.697 & 4686 & 4810.094 & 4600.222 & 121.340 & 1.03 & 21413 & 23461.411 & 22547.239 & 790.885 & 1.10\\
+  & & 1 & 0.657 & 5297 & 5836.450 & 5442.214 & 235.606 & 1.10 & 22802 & 27096.049 & 24824.725 & 1415.784 & 1.10\\
+\midrule
+
+
+\multirow{3}{*}{\makecell{cscmax \\ 30\_15\_2}} & \multirow{3}{*}{30 X 15} & 0.1 &  0.680& 5014 & 4987.340 & 4931.863 & 32.466 & 0.99 & 21701 & 21717.042 & 21711.987 & 4.136 &  1.00 \\
+  & & 0.5 & 0.657 & 5708 & 5792.257 & 5567.154 & 143.244 & 1.01 &  23417 & 24833.082 & 23561.022 & 464.668 & 1.06 \\
+  & & 1 & 0.724 & 6324 & 6854.744 & 6459.147 & 246.865 & 1.08 & 34605 & 34605.057 & 32865.581 & 837.235 & 1.00\\
+\midrule
+
+\multirow{3}{*}{\makecell{cscmax \\ 40\_20\_5}} & \multirow{3}{*}{40 X 20} & 0.1 & 0.653 & 6716 & 6689.988 & 6628.501 & 36.241 & 0.99 & 33950 & 35390.976 & 34151.698 & 516.134 & 1.04 \\
+  & & 0.5 & 0.690 & 8569 & 8524.441 & 8258.515 & 159.984 & 0.99 & 32384 & 35267.634 & 33782.977 & 1389.356 & 1.09 \\
+  & & 1 &  0.648 & 8966 & 9622.562 & 9167.436 & 289.895 & 1.07 & 35523 & 43038.499 & 40990.318 & 2387.814 & 1.21\\
+\midrule
+
+\multirow{3}{*}{\makecell{cscmax \\ 50\_20\_3}} & \multirow{3}{*}{50 X 20} & 0.1 & 0.660 & 9152 & 10003.942 & 9914.975 & 51.546 & 1.09 & 35227 & 35371.868 & 35386.501 & 385.263 & 1.00\\
+  & & 0.5 & 0.669 & 10098 & 10883.093 & 10508.788 & 246.608 & 1.07 & 37071 & 42722.843 & 39524.659 & 2329.438 & 1.07\\
+  & & 1 & 0.668 & 10921 & 12271.145 & 11812.203 & 356.501 & 1.12 & 44085 & 51451.363 & 46689.336 & 2154.574 & 1.18\\
+  \bottomrule
+\end{tabular}}
+\caption{Results with JSP benchmarks with different size and levels of uncertainty.}
+\label{tab:resultSynthetic_appendix}
+\end{table*}
+
+
+% \btext{In this section, we show that a lower bound for the probabilistic makespan $M^*_\alpha$ can be obtained by solving a corresponding deterministic problem parameterized by $q$, as proved by~\cite{beck2007proactive}.  The lower bound result is critical to efficiently select models using Monte Carlo simulation.
+% %Furthermore, the authors in~\cite{beck2007proactive} demonstrate that this lower bound can be tightened by selecting different values for \( q \) when additional assumptions are satisfied. 
+
+% A solution $s$ to the BPSP consists of a total ordering of activities on each resource in the set $\mathcal{R}$, such that this ordering is compatible with the precedence constraints defined over cases ($\Pi_{i,a_j}$). That is, the union of the resource-based orderings and the intra-case precedence relations must form an acyclic relation over all activities $\mathcal{A}_{\mathcal{I}}$.
+
+% %A \textit{s-path} is a sequence of activities that if $a_i$ immediately precedes $a_j$ in the sequence, then either (i) $a_i$ and $a_j$ are in the same case, and $a_i$ precedes $a_j$, or (ii) $a_i$ and $a_j$ are in the same resource set and $s$ orders $a_i$ before $a_j$. 
+% An $s$-path $\pi$ is called \textit{critical $s$-path} if its length $len(\pi)$ is the longest among all $s$-paths and thus corresponds to the makespan of the solution $s$.
+% The length $len(\pi)$ of a path $\pi$ is defined as the sum of the durations of the activities along that path. In the corresponding deterministic BPSP problem defined over $q$, the length $len(\pi)_q$ is defined as $\sum_{a_i \in \pi} \mu_{a_i} + q\sum_{a_i \in \pi} \sigma_{a_i}$. 
+
+% We aim to find an $\alpha$-sufficient value of $q$ such that the deterministic makespan $M_q(s)$ serves as a lower bound for the probabilistic makespan $M_\alpha(s)$. Specifically, $Pr(len(\pi) > len_q(\pi)) > \alpha$ meaning that is less more than $\alpha$ chance that the random path length exceeds the deterministic ones.
+
+% Assuming the durations of the activities in a path $\pi$ are independent, we can define the expected path length as $\mu_{\pi} = \sum_{a_i \in \pi} \mu_{a_i}$ and its variance as $\sigma^2_\pi = \sum_{a_i \in \pi} \sigma^2_{a_i}$. For $B \geq 0$, let $\theta_B(\pi)$ define as $\theta_B(\pi) = \mu_\pi + B \sigma_\pi$, we consider $B$ as $\alpha$-sufficient if for any critical path $\pi$ of any solution, $Pr(len(\pi) > \theta_B(\pi)) > \alpha$, i.e. there is more than $\alpha$ chance that $\pi$ is longer than its expected duration by more than $B$ standard deviations. If each activity duration is normally distributed,  then the path length $len(\pi)$ also follows a normal distribution, being the sum of independent normal variables. Even when the activity durations are not normally distributed, the Central Limit Theorem ensures that $len(\pi)$ will often be approximately normally distributed.
+
+% Based on that, we can approximate $Pr(len(\pi) > \theta_B(\pi))$ as $1 - \Phi(B)$, where $\Phi$ is the cumulative distribution function of the standard normal distribution. Consequently, a value of $B$ slightly less than $\Phi^{-1}(1 - \alpha)$ will be $\alpha$-sufficient. We define a value $q$ as $B$-sufficient if, for every critical path $\pi$ in any solution, the deterministic path length $len_q(\pi)$ is less than or equal to $\theta_B(\pi)$. 
+% In other words, if $q$ is $B$-sufficient for some $B$ that is $\alpha$-sufficient, then $q$ is also $\alpha$-sufficient.
+
+% Formally, $q$ is \emph{$B$-sufficient} if and only if, for any critical path $\pi$ of any solution,
+% $\sum_{a_i \in \pi} \mu_i + q \sum_{a_i \in \pi} \sigma_i \leq \sum_{a_i \in \pi} \mu_i + B \sqrt{\sum_{a_i \in \pi} \sigma_i^2}$. This inequality can be rearranged as: $q \leq \frac{B}{\sqrt{U_\pi}} \frac{\sqrt{\text{Mean}_{a_i \in \pi} \sigma^2_i}}{\text{Mean}_{a_i \in \pi} \sigma_i}$, where $U_\pi$ denotes the number of uncertain activities in the path $\pi$, as any activity $a_i$ for which the standard deviation $\sigma_i$ equals 0  (i.e., with deterministic duration) can be excluded from both the summations and the means.
+
+% Accordingly, a crude sufficient condition for $q$ to be $B$-sufficient is $q \leq \frac{B}{\sqrt{U}}$ where $U$ is an upper bound on the number of uncertain activities in any critical path $\pi$ across all probabilistically optimal solutions. Given that the lengths of the paths are approximately normally distributed, we set $q$ to
+% \begin{equation}
+% q_U = \frac{\Phi^{-1}(1-\alpha)}{\sqrt{U}}.
+% \label{eq:qU}
+% \end{equation}
+% }
+
+% If $q$ is set to
+% \begin{equation}
+% q_U = \frac{\Phi^{-1}(1-\alpha)}{\sqrt{U}},
+% \label{eq:qU}
+% \end{equation}
+% where $\Phi^{-1}$ is the inverse of the standard normal cumulative distribution function (CDF), and $U$ represents an upper bound on the number of uncertain activities along the deterministic critical path (e.g., $U$ can be set to the total number of activities), it is guaranteed that, for  Resource-Constrained Project Scheduling Problem (RCPSP), solving the deterministic problem yields a Makespan $M_U$ that serves as a \emph{lower bound} for the probabilistic Makespan $M^*_\alpha$~\cite{beck2007proactive}.
+% Furthermore, the authors in~\cite{beck2007proactive} demonstrate that this lower bound can be tightened by selecting different values for \( q \) when additional assumptions are satisfied. The lower bound result is critical to efficiently select models using Monte Carlo simulation.
+
+%% The file named.bst is a bibliography style file for BibTeX 0.99c
+\bibliographystyle{named}
+\bibliography{ijcai25}
+
+\end{document}
+

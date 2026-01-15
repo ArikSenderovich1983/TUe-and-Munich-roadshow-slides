@@ -1,0 +1,101 @@
+\begin{comment}
+    Figure~\ref{fig:all-methods-comparison} presents a comparison of SPO+, Rank Loss, and the proposed sigmoid surrogate on nonlinear datasets with uneven task durations.
+The x-axis shows the noise standard deviation, and the y-axis plots the logarithmic SCT error relative to the optimal solution.
+The sigmoid surrogate demonstrates robustness across noise levels, consistently achieving lower SCT compared to SPO+ and Rank Loss.
+
+Figure~\ref{fig:improvement-percentages} shows the percentage improvement of SPO+ and Rank Loss relative to the sigmoid surrogate.
+Although SPO+ and Rank Loss perform competitively under low-noise conditions, their relative performance deteriorates as noise increases, underscoring the robustness of the proposed approach.
+
+Figure~\ref{fig:range-impact} examines performance as task duration ranges vary under a fixed noise level.
+The sigmoid surrogate maintains lower SCT errors across wide variability, highlighting its effectiveness in challenging scheduling scenarios.
+Our results demonstrate that the proposed sigmoid-based surrogate consistently outperforms SPO+ and Rank Loss in minimizing SCT, particularly under high-noise and high-variability conditions. 
+
+Turning to efficiency analysis, Table~\ref{tab:runtimes} reports the average runtime over 10 iterations for each method under consistent settings.
+The sigmoid method averaged 58.3 seconds, SPO+ averaged 57.3 seconds, and Rank Loss averaged 58.2 seconds, demonstrating comparable computational costs across methods.
+While runtime is comparable across methods, the improved SCT minimization offered by the sigmoid surrogate positions it as a promising choice for real-world scheduling applications involving uncertainty and variability.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.45\textwidth]{improvement--percentage.png}
+    \caption{Percentage improvement of SPO+ and Rank Loss relative to the sigmoid surrogate.
+    Positive values indicate worse performance compared to the sigmoid surrogate loss.}
+    \label{fig:improvement-percentages}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.45\textwidth]{fixed--noise (2).png}
+    \caption{Impact of task duration range variability on SCT error for the three methods.}
+    \label{fig:range-impact}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Average runtime over 10 iterations per method.}
+\label{tab:runtimes}
+\begin{tabular}{lcc}
+\toprule
+Method & Runtime (seconds) \\
+\midrule
+Sigmoid surrogate & 58.3 \\
+SPO+ surrogate & 57.3 \\
+Rank Loss & 58.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{comment}
+
+
+
+%\section{Experiments: Two-Machine Flow Shop}
+%\label{sec:flowshop-experiments}
+
+%Designing and evaluating surrogates for the two-machine flow shop (Problem~2) follows the same principles as in the SCT case but requires careful handling of both group assignments and within-group orderings.
+%In this version of the paper, we focus on presenting the surrogate construction and leave a full empirical study of the flow shop surrogate to future work. Below we outline the intended experimental design to clarify how our framework extends empirically to this setting.
+
+%The primary evaluation metric was the SCT achieved by predicted task orderings.Lower SCT values indicate better scheduling performance. 
+%SCT errors were visualized on a logarithmic scale to highlight relative differences across noise levels and duration ranges.
+%Percentage improvements relative to the proposed surrogate-based method were also reported. We plan to generate synthetic flow shop instances with known processing times $(p_{i1},p_{i2})$ and derive features from them, mirroring the setup in Section~\ref{sec:evaluation}.
+
+
+\begin{table}[t]
+\centering
+\resizebox{0.95\columnwidth}{!}{
+\begin{tabular}{lccc}
+\toprule
+\multirow{2}{*}{Method} & \multicolumn{3}{c}{Noise Level} \\
+                         & 0 & 5 & 10 \\
+\midrule
+MSE     & 0.715 & 4.110 & 9.492 \\
+Rank Loss  & 2.499  & 6.069 & 11.181 \\
+Regret Loss &  \textbf{0.225} & \textbf{3.983} & \textbf{9.327} \\
+SPO+ & 1.387 & 5.160 & 10.415  \\
+\bottomrule
+\end{tabular}}
+\caption{SCT errors across with nonlinear dataset with different noise level as $10\times1$ jobs as input to schedule.}
+\label{tab:linear}
+\end{table}
+
+\begin{table*}[t]
+\centering
+\begin{tabular}{@{}>{\cellcolor{lightgray}}l@{\hskip 0.2in}lccccccc@{}} % extra column for vertical label
+\toprule
+\cellcolor{white} & Method & \multicolumn{6}{c}{Noise Level $\eta$} \\
+ \cellcolor{white} &        & 0 & 2 & 4 & 6 & 8 & 10 \\
+\midrule
+ & MSE        & 0.576$\pm$0.28 & 0.363$\pm$0.26 & 0.359$\pm$0.12 & 0.701$\pm$0.25 & 0.706$\pm$0.15 & 1.132$\pm$0.16 \\
+ & Rank Loss  & 0.225$\pm$0.05 & 0.284$\pm$0.05 & 0.356$\pm$0.04 & 0.494$\pm$0.04 & 0.647$\pm$0.06 & 0.976$\pm$0.06 \\
+ & Regret Loss & \textbf{0.209}$\pm$0.04 & \textbf{0.222}$\pm$0.05 & \textbf{0.270}$\pm$0.03 & \textbf{0.402}$\pm$0.02 & \textbf{0.622}$\pm$0.03 & \textbf{0.954}$\pm$0.04 \\
+ \multirow{-4}{*}{\rotatebox[origin=c]{90}{\textbf{Linear}}}  & SPO+       & 29.135$\pm$0.18 & 13.419$\pm$0.24 & 6.607$\pm$1.09 & 35.705$\pm$0.24 & 14.961$\pm$0.08 & 25.287$\pm$1.25 \\
+\midrule
+& MSE     & \textbf{2.264}$\pm$0.28 & 2.778$\pm$0.42 & 2.780$\pm$0.20 & 2.679$\pm$0.30 & 3.126$\pm$0.23 & 3.623$\pm$0.19 \\
+& Rank Loss  & 2.614$\pm$0.07 & 2.748$\pm$0.10 & 2.753$\pm$0.07 & 3.017$\pm$0.04 & 3.192$\pm$0.06 & 3.544$\pm$0.07 \\
+& Regret Loss & 2.621$\pm$0.10 & \textbf{2.584}$\pm$0.09 & \textbf{2.748}$\pm$0.07 & \textbf{2.932}$\pm$0.09 & \textbf{3.076}$\pm$0.10 & \textbf{3.399}$\pm$ 0.07\\
+\multirow{-4}{*}{\rotatebox[origin=c]{90}{\textbf{NonLinear}}} & SPO+ & 17.746$\pm$1.80 & 19.784$\pm$0.08 & 16.416$\pm$0.09 & 22.234$\pm$0.09 & 19.753$\pm$0.12 & 13.816$\pm$0.15 \\
+\bottomrule
+\end{tabular}
+\caption{SCT errors across linear and nonlinear datasets of size $10000$ with different noise level.}
+\label{tab:linear_nonlinear_SCT}
+\end{table*}

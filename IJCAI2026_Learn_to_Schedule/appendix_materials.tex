@@ -1,0 +1,386 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{subcaption}
+\title{Johnson rule}
+\date{}
+\begin{document}
+
+\maketitle
+
+Suppose that in the original schedule is schedule job $L$ precedes job $J$ and job $M$ follows job $K$, as result of Johnson’s rule.
+
+Let us define the three possible reasons that determine a swap in the scheduling order (From the proof by contradiction of Johnson’s rule presented in , we can calculate the cost of the interchange between $J$ and $K$ as in \textit{Scheduling theory algorithms and systems by Pinedo}):
+\begin{itemize}
+    \item job $J$ belongs to SET II and job $K$ to SET I 
+    \item jobs $J$ and $K$ belongs to SET I and $p_{1,J} > p_{1,K}$
+    \item jobs $J$ and $K$ belongs to SET II and $p_{2,J} > p_{1,K}$
+\end{itemize}
+
+
+Let $C_{i,J}$ denote the completion time of job $J$ on machine $i$ under the optimal schedule and $C'_{i,J}$ the completion time of job $J$ on machine $i$ after the pairwise interchange.
+
+\textbf{Makespan}: With $n$ the last elements of the $S$ schedule the maskespan is:
+\[
+\text{Makespan} = C_{2,n}  = \max \big( C_{2,n-1}, C_{1,n}\big) + p_{2,n}
+\]
+
+\[
+SCT = \sum_{j=1}^{n} C_{2,j}
+\]
+
+
+
+Interchanging jobs $J$ and $K$ clearly does not affect the starting time of job $M$ on Machine 1, as its starting time on Machine 1 equals $C_{1,L} + p_{1,J} + p_{1,K}$. However, it is of interest to know at what time Machine 2 becomes available for job $M$.
+
+\paragraph{First Case}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{Job} & \textbf{Machine 1} & \textbf{Machine 2} \\ 
+        \midrule
+        L & 1 & 3 \\
+        J & 4 & 6 \\
+        K & 10 & 5 \\
+        M & 3 & 1 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Real data ($x$)}
+    \label{tab:real}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{images_appendix/case1.png}
+\caption{job $J$ belongs to SET II and job $K$ to SET I}
+\label{fig:pipeline}
+\end{figure}
+
+
+The OPTIMAL SCHEDULE is $\rightarrow$ $L, J, K, M$.
+Suppose to set SET I : $\{L, K\}$ with SPT order an SET II : $\{J, M\}$ with LPT order
+
+\begin{itemize}
+    \item $C_{2,K}$ is the completion time of $K$ in the optimal schedule.
+    \begin{equation}
+        C_{2,K} = \max (C_{2,L} + p_{2,K} + p_{2,J}, C_{1,L} + p_{1,J} + p_{2,J}+ p_{2,K}, C_{1,L} + p_{1,J} + p_{1,K}+ p_{2,K})
+    \end{equation}
+    \item $C'_{2,J}$ is the completion time of $J$ in swapped schedule.
+    \begin{equation}
+        C'_{2,J} = \max (C_{2,L} + p_{2,K} + p_{2,J}, C_{1,L} + p_{1,K} + p_{2,K}+ p_{2,J}, C_{1,L} + p_{1,K} + p_{1,J}+ p_{2,J})
+    \end{equation}
+\end{itemize}
+    
+So in the example of Table~\ref{tab:real} the result would be:
+\[
+\begin{aligned}
+C_{2,K} &= 
+\max \big( 
+    C_{2,L} + p_{2,K} + p_{2,J},\;
+    C_{1,L} + p_{1,J} + p_{2,J} + p_{2,K},\;
+    C_{1,L} + p_{1,J} + p_{1,K} + p_{2,K}
+\big) \\
+&= \max \big( 
+    4 + 5 + 6,\;
+    1 + 4 + 6 + 5,\;
+    1 + 4 + 10 + 5
+\big) \\
+&= 20
+\end{aligned}
+\]
+
+\[
+\begin{aligned}
+C'_{2,J} &= 
+\max \big( 
+    C_{2,L} + p_{2,K} + p_{2,J},\;
+    C_{1,L} + p_{1,K} + p_{2,K}+ p_{2,J},\;
+    C_{1,L} + p_{1,K} + p_{1,J}+ p_{2,J}
+\big) \\
+&= \max \big( 
+    4 + 5 + 6,\;
+    1 + 10 + 5 + 6,\;
+    1 + 10 + 4 + 6
+\big) \\
+&= 22
+\end{aligned}
+\]
+
+\[
+C'_{2,K} = \max \big( C_{2,L}, C'_{1,K} \big) + p_{2,K} = \max \big( 4, 11 \big) + 5
+\]
+
+\[
+C'_{2,M} = \max \big( C'_{2,J}, C_{1,M} \big) + p_{2,M} = \max \big( 22, 18 \big) + 1 = 23
+\]
+
+\[
+Makespan_{swap} = 23
+\]
+
+\[
+Makespan_{original} = 21
+\]
+
+\paragraph{Second case}
+
+Suppose jobs $J$ and $K$ belongs to SET I and we swapped the order in the set, so the result schedule is $L, K, J, M$.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{Job} & \textbf{Machine 1} & \textbf{Machine 2} \\ 
+        \midrule
+        L & 1 & 3 \\
+        J & 4 & 6 \\
+        K & 5 & 10 \\
+        M & 3 & 1 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Real data ($x$)}
+    \label{tab:real}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{images_appendix/case2.png}
+\caption{job $J$ and $K$ belongs to SET I}
+\label{fig:pipeline}
+\end{figure}
+
+\[
+\begin{aligned}
+C'_{2,J} &= 
+\max \big( 
+    C_{2,L} + p_{2,K} + p_{2,J},\;
+    C_{1,L} + p_{1,K} + p_{2,K}+ p_{2,J},\;
+    C_{1,L} + p_{1,K} + p_{1,J}+ p_{2,J}
+\big) \\
+&= \max \big( 
+    4 + 10 + 6,\;
+    1 + 5 + 10 + 6,\;
+    1 + 5 + 4 + 6
+\big) \\
+&= 22
+\end{aligned}
+\]
+
+\[
+C'_{2,K} = \max \big( C_{2,L}, C'_{1,K} \big) + p_{2,K} = \max \big( C_{2,L}, C_{1,L} + p_{1,K} \big) + p_{2,K} = 
+\max \big( 4, 1 + 5 \big) + 10 = 16
+\]
+
+\[
+C'_{2,M} = \max \big( C'_{2,J}, C_{1,M} \big) + p_{2,M} = \max \big( 22, 13 \big) + 1 = 23
+\]
+
+\paragraph{Third case}
+
+Suppose jobs $J$ and $K$ belongs to SET II and we swap the order in the set, so the result schedule is $L, K, J, M$.
+SET I: $\{L\}$, SET II: $\{K, J, M\}$
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{c c c}
+        \toprule
+        \textbf{Job} & \textbf{Machine 1} & \textbf{Machine 2} \\ 
+        \midrule
+        L & 1 & 3 \\
+        J & 11 & 6 \\
+        K & 10 & 5 \\
+        M & 3 & 1 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Processing time}
+    \label{tab:real}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{images_appendix/case3.png}
+\caption{job $J$ and $K$ belongs to SET I}
+\label{fig:pipeline}
+\end{figure}
+
+\[
+\begin{aligned}
+C'_{2,J} &= 
+\max \big( 
+    C_{2,L} + p_{2,K} + p_{2,J},\;
+    C_{1,L} + p_{1,K} + p_{2,K}+ p_{2,J},\;
+    C_{1,L} + p_{1,K} + p_{1,J}+ p_{2,J}
+\big) \\
+&= \max \big( 
+    4 + 5 + 6,\;
+    1 + 10 + 5 + 6,\;
+    1 + 10 + 11 + 6
+\big) \\
+&= 28
+\end{aligned}
+\]
+
+\[
+C'_{2,M} = \max \big( C'_{2,J}, C_{1,M} \big) + p_{2,M} = \max \big( 28, 25 \big) + 1 = 29
+\]
+
+
+The nondifferentiability comes only from the max(…). A simple, standard way to make it differentiable everywhere is to replace max with a smooth maximum (log-sum-exp / softmax family)
+
+\[
+f = \max\Bigl(
+C_{2,L} + p_{2,K} + p_{2,J},\;
+C_{1,L} + p_{1,K} + p_{2,K} + p_{2,J},\;
+C_{1,L} + p_{1,K} + p_{1,J} + p_{2,J}
+\Bigr)
+ - C_{2,K}.
+\]
+
+Define for convenience:
+
+\[
+\begin{aligned}
+x_1 &= C_{2,L} + p_{2,K} + p_{2,J},\\
+x_2 &= C_{1,L} + p_{1,K} + p_{2,K} + p_{2,J},\\
+x_3 &= C_{1,L} + p_{1,K} + p_{1,J} + p_{2,J}.
+\end{aligned}
+\]
+
+Then
+
+\[
+f = \max(x_1, x_2, x_3) - C_{2,K}.
+\]
+
+Replace the max with the differentiable smooth maximum:
+
+\[
+\operatorname{smooth\_max}_\alpha(x_1,x_2,x_3)
+= \frac{1}{\alpha}\,\log\!\left(
+e^{\alpha x_1} +
+e^{\alpha x_2} +
+e^{\alpha x_3}
+\right),
+\qquad \alpha>0.
+\]
+
+Thus your smooth differentiable function is:
+
+\[
+f_\alpha
+= \frac{1}{\alpha}\,\log\!\left(
+e^{\alpha x_1} +
+e^{\alpha x_2} +
+e^{\alpha x_3}
+\right)
+- C_{2,K}.
+\]
+
+
+\paragraph{Multiple swaps}
+
+Suppose to have as result schedule $K, J, L, M$ given by the predictions $f(p_{1,i})$ and  $f(p_{2,i})$.
+
+Optimal $S^* = (L, J, K, M)$ and its index is $L=1,J=2,K=3,M=4$. So if we "translate" our schedule in the optimal one with the minimum number of adjacent swaps. 
+
+\[
+S^* = (L,J,K,M),\qquad S=(K,J,L,M)
+\]
+
+\[
+C_{max}(S^*) = 21,\qquad C_{max}(S)= 25
+\]
+
+Indexing by $S^*: L=1,\; J=2,\; K=3,\; M=4$, so
+\[
+p=(S(1),S(2),S(3),S(4))=(3,2,1,4).
+\]
+
+% inversion formula
+\[
+\operatorname{Inv}(p)=\sum_{1\le i<j\le n}\mathbf{1}[p_i>p_j].
+\]
+
+% computation
+\[
+\operatorname{Inv}(p)=\mathbf{1}[3>2]+\mathbf{1}[3>1]+\mathbf{1}[2>1]=1+1+1=3.
+\]
+
+These correspond to the inverted job-pairs (using the optimal-before convention):
+
+\[
+\operatorname{Inv}(p)=\sum_{1\le i<j\le 4}\mathbf{1}[p_i>p_j] = 3
+\]
+
+\[
+\begin{aligned}
+(i,j)=(1,2):&\quad p_1=3,\ p_2=2,\quad \mathbf{1}[3>2]=1  &\Rightarrow\ &\text{job pair }(K,J)\\
+(i,j)=(1,3):&\quad p_1=3,\ p_3=1,\quad \mathbf{1}[3>1]=1  &\Rightarrow\ &\text{job pair }(K,L)\\
+(i,j)=(2,3):&\quad p_2=2,\ p_3=1,\quad \mathbf{1}[2>1]=1  &\Rightarrow\ &\text{job pair }(J,L)\\
+\end{aligned}
+\]
+
+\[
+\text{Hence } \operatorname{Inv}(p)=3\text{, i.e. three inverted pairs (minimum 3 adjacent swaps).}
+\]
+
+
+Adjacent-swap sequence (transforming 
+$(K,J,L,M) \rightarrow (L,J,K,M)$):
+
+\[
+\;\xrightarrow{\text{swap }(K,J)}\;
+(J,K,L,M)
+\;\xrightarrow{\text{swap }(K,L)}\;
+(J,L,K,M)
+\;\xrightarrow{\text{swap }(J,L)}\;
+(L,J,K,M).
+\]
+
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images_appendix/first.png}
+        \caption{First figure}
+    \end{subfigure}
+    \vspace{0.5cm}
+    \begin{subfigure}{0.9\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images_appendix/second.png}
+        \caption{Second figure}
+    \end{subfigure}
+
+    \caption{Two stacked figures}
+\end{figure}
+
+
+For each swap we can compute the "gain" with this formula:
+
+\[
+C'_{2,a} = \max (C_{2,(a-1)} + p_{2,b} + p_{2,a}, C_{1,(a-1)} + p_{1,b} + p_{2,b}+ p_{2,a}, C_{1,(a-1)} + p_{1,b} + p_{1,a}+ p_{2,a})
+\]
+
+when $a$ is swapped with $b$.
+
+\begin{itemize}
+    \item $(K,J)$ so $C'_{2,K} - C_{2,J} = 19 - 21 = -2$ and $C_{max} = 23$:
+    \[
+        C'_{2,K} = \max(0 + 5 + 6, 0 + 4 + 6 + 5, 0 + 4 + 10 + 5) = 19
+    \]
+    \item $(K,L)$ so $C'_{2,K} - C_{2,L} = 20 - 22 = -2$ and $C_{max} = 21$
+    \[
+        C'_{2,K} = \max(10 + 3 + 5, 4 + 1 + 3 + 5, 4 + 1 + 10 + 5) = 20
+    \]
+    \item $(J,L)$ so $C'_{2,J} - C_{2,L} = 11 - 13 = -2$ but in this case $C_{1,K} > C'_{2,J}$ so $C_{max}$ remains $21$
+    \[
+        C'_{2,J} = \max(0 + 3 + 6, 0 + 1 + 3 + 6, 0 + 1 + 4 + 6) = 11
+    \]
+\end{itemize}
+
+
+\end{document}

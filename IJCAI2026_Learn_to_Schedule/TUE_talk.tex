@@ -1,0 +1,334 @@
+\documentclass[aspectratio=169, 10pt]{beamer}
+
+% Theme and Colors
+\usetheme{Madrid}
+\usecolortheme{beaver} % Red/Gray theme - punchy
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+% Packages
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+% Custom Commands
+\newcommand{\btext}[1]{{\color{darkred}\textbf{#1}}}
+\newcommand{\m}{\mathcal}
+
+% Title Info
+\title[Smart Predict-and-Schedule]{Surrogate-Based Smart Predict-and-Schedule}
+\subtitle{Opening the Black Box of Polynomial-Time Algorithms}
+\author[Francesca Meneghello]{
+  Francesca Meneghello\inst{2,3} \and
+  Bita Ghodsi\inst{1} \and
+  \textbf{Arik Senderovich}\inst{1} \and
+  Remco Dijkman\inst{4} \and
+  J. Christopher Beck\inst{5}
+}
+\institute[]{
+  \inst{1} York University \and
+  \inst{2} Sapienza University of Rome \and
+  \inst{3} Fondazione Bruno Kessler \and
+  \inst{4} Eindhoven University of Technology (TU/e) \and
+  \inst{5} University of Toronto
+}
+\date{\today}
+
+\begin{document}
+
+%---------------------------------------------------------
+% TITLE SLIDE
+%---------------------------------------------------------
+\begin{frame}
+    \titlepage
+\end{frame}
+
+%---------------------------------------------------------
+% CONTEXT: Business Process Optimization
+%---------------------------------------------------------
+\begin{frame}{Context: Business Process Optimization (BPO)}
+    \textbf{BPO} focuses on optimal decision-making during process execution.~\\
+    
+    \textbf{Key Decision Types:}
+    \vspace{0.5em}
+    \begin{columns}
+        \column{0.6\textwidth}
+        
+        \begin{itemize}
+            \item \textbf{Task Prioritization:} Which waiting case to process next? \pause
+            \item \textbf{Resource Allocation:} Which resource to assign to a task? \pause
+            \item \textbf{Case Scheduling and Admission:} When to admit/schedule a case? (focus of this talk) \pause
+            \item \textbf{Path Choice:} How to route a case?
+        \end{itemize}
+        
+        \column{0.4\textwidth}
+        \centering
+        \textbf{Objectives:} \\
+        Min.\ Cost, Max.\ Throughput, Min.\ Waiting Time. \pause
+    \end{columns}
+    
+    \vspace{1cm}
+    \centering
+    \alert{The complexity lies in \textbf{Uncertainty}: \\ arrivals, \textbf{durations}, and paths.}
+\end{frame}
+
+\begin{frame}{Focus: Scheduling Under Duration Uncertainty}
+    Many BPO problems reduce to \textbf{Scheduling} problems (Task Prioritization / Admission).
+    
+    \vspace{0.5em}
+    \begin{itemize}
+        \item \textbf{Ideal World:} If we knew task durations we could use optimal policies (e.g., SPT).
+        \item \textbf{Real World:} Durations are unknown and stochastic.
+        \item \textbf{Standard Approach:} Predict, and then employ deterministic rules.
+    \end{itemize}
+    
+    \vspace{0.5em}
+    \textbf{Result:} Suboptimal decisions due to the \emph{Predict-then-Optimize} gap.
+\end{frame}
+
+%---------------------------------------------------------
+% HOOK: The Disconnect
+%---------------------------------------------------------
+\begin{frame}{The Disconnect}
+    \begin{columns}
+        \column{0.5\textwidth}
+        \begin{block}{Prediction (ML)}
+            Predict task durations $\hat{y}$ from features $x$.
+            \begin{itemize}
+                \item Objective: Minimize MSE $\|\hat{y} - y\|^2$.
+                \item \textbf{Blind to downstream usage.}
+            \end{itemize}
+        \end{block}
+
+        \column{0.5\textwidth}
+        \begin{block}{Scheduling (OR)}
+            Sequence tasks to minimize cost (SCT, Makespan).
+            \begin{itemize}
+                \item Input: Predictions $\hat{y}$.
+                \item \textbf{Sensitive to order, not value.}
+            \end{itemize}
+        \end{block}
+    \end{columns}
+
+    \vspace{1cm}
+    \centering
+    \Large \alert{Small prediction errors can cause catastrophic scheduling regret.}
+\end{frame}
+
+%---------------------------------------------------------
+% MOTIVATION: Why Current Methods Fail
+%---------------------------------------------------------
+\begin{frame}{The Landscape of Solutions}
+    \begin{enumerate}
+        \item<1-> \textbf{Predict-then-Optimize (MSE)}
+        \begin{itemize}
+            \item Ignores decision structure.
+            \item \textit{Result:} Optimizes for the wrong metric.
+        \end{itemize}
+        \vspace{0.5em}
+        
+        \item<2-> \textbf{Smart Predict-and-Optimize (SPO/SPO+)} \cite{elmachtoub2022smart}
+        \begin{itemize}
+            \item Minimizes Decision Regret: $R(\hat{y}, y^*) = C(\pi(\hat{y}), y^*) - C(\pi(y^*), y^*)$.
+            \item \textbf{Problem:} Uses convex relaxation (subgradients) of the optimization oracle.
+            \item \textit{Critique:} Treats the algorithm as a \textbf{Black Box}. Can be loose/unstable for discrete sorting/swapping.
+        \end{itemize}
+        \vspace{0.5em}
+
+        \item<3-> \textbf{Learning to Rank (LTR)}
+        \begin{itemize}
+            \item Optimizes AUC / NDCG.
+            \item \textit{Critique:} Optimizes generic ranking, not \textbf{SCT} or \textbf{Makespan}.
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+%---------------------------------------------------------
+% OUR APPROACH: White-Box SPO
+%---------------------------------------------------------
+\begin{frame}{Our Approach: ``White-Box'' SPO}
+    \centering
+    \Large Don't treat the algorithm as a black box. \\
+    \textbf{Open it up.}
+    
+    \vspace{1cm}
+    \normalsize
+    Many polynomial-time algorithms (SPT, EDD, Johnson's Rule) are just collections of \textbf{Critical Decisions}:
+    \begin{itemize}
+        \item Pairwise comparisons (Sort $i$ vs $j$).
+        \item Threshold tests (Is $p_{i1} < p_{i2}$?).
+    \end{itemize}
+    
+    \vspace{0.5em}
+    \alert{We build a differentiable loss function that targets these specific decisions.}
+\end{frame}
+
+%---------------------------------------------------------
+% THE FRAMEWORK
+%---------------------------------------------------------
+\begin{frame}{The Framework: 4 Steps}
+    \textbf{Step 1:} Identify unknown parameters $\theta$ (e.g., durations).
+    
+    \textbf{Step 2:} Identify the \textbf{Deterministic Algorithm} $\mathcal{A}(\theta)$.
+    \begin{itemize}
+        \item Must be polynomial-time (SPT, Johnson).
+    \end{itemize}
+    
+    \textbf{Step 3:} Decompose into \textbf{Critical Decisions} $\mathcal{K}$.
+    \begin{itemize}
+        \item Define \alert{Decision Score} $s_d(\omega; x)$.
+        \item Define \alert{Impact Weight} $\phi_d(\theta^*)$.
+    \end{itemize}
+    
+    \textbf{Step 4:} Minimize the \textbf{Surrogate Loss}:
+    \begin{equation*}
+        L_{\mathrm{surr}}(\omega) = \sum_{d \in \mathcal{K}} \underbrace{\phi_d(\theta^*)}_{\text{Cost of Error}} \cdot \underbrace{\sigma\left(\frac{-m_d(\omega)}{\lambda}\right)}_{\text{Prob. of Error}}
+    \end{equation*}
+    where $m_d$ is the \emph{oriented margin} ($m_d > 0 \iff$ correct decision).
+\end{frame}
+
+%---------------------------------------------------------
+% PROBLEM 1: SCT (Single Machine)
+%---------------------------------------------------------
+\begin{frame}{Instantiation 1: Single Machine (SCT)}
+    \textbf{Objective:} Minimize Sum of Completion Times (SCT).
+    
+    \textbf{Algorithm:} Shortest Processing Time (SPT). Sort jobs by duration.
+    
+    \textbf{Critical Decisions $\mathcal{K}$:} All pairs $(i,j)$ with $i < j$.
+    
+    \begin{itemize}
+        \item \textbf{Decision Score $s_d$:} $\hat{y}_i - \hat{y}_j$ (Predict order).
+        \item \textbf{Impact Weight $\phi_d$:} The cost of swapping $i$ and $j$:
+        \[ R_{i,j} = (j-i)(y_j - y_i) \]
+    \end{itemize}
+    
+    \textbf{The Loss:}
+    \[ L_{\text{SCT}} = \sum_{y_i < y_j} R_{i,j} \cdot \sigma\left(\frac{\hat{y}_i - \hat{y}_j}{\lambda}\right) \]
+    \small \textit{Interpretation: Weighted soft-penalty for every misordered pair.}
+\end{frame}
+
+%---------------------------------------------------------
+% PROBLEM 2: Flow Shop (Johnson)
+%---------------------------------------------------------
+\begin{frame}{Instantiation 2: Two-Machine Flow Shop}
+    \textbf{Objective:} Minimize Makespan ($F2 || C_{\max}$).
+    
+    \textbf{Algorithm:} Johnson's Rule.
+    \begin{enumerate}
+        \item \textbf{Group:} Partition into $G_1$ ($p_1 < p_2$) and $G_2$ ($p_1 \ge p_2$).
+        \item \textbf{Sort:} Sort $G_1$ ascending, $G_2$ descending.
+    \end{enumerate}
+    
+    \textbf{The Loss ($L_{\text{Johnson}}$):}
+    \begin{columns}
+        \column{0.5\textwidth}
+        \centering
+        \textbf{Group Loss}
+        \[ \sum_i |p_{i1} - p_{i2}| \cdot \sigma(\dots) \]
+        \small Penalize wrong grouping, weighted by distance to boundary.
+        
+        \column{0.5\textwidth}
+        \centering
+        \textbf{Order Loss}
+        \[ \sum_{i,j} \Delta_{i,j} \cdot \sigma(\dots) \]
+        \small Penalize wrong sorting, weighted by makespan increase.
+    \end{columns}
+\end{frame}
+
+%---------------------------------------------------------
+% RESULTS: Synthetic
+%---------------------------------------------------------
+\begin{frame}{Results: Synthetic SCT}
+    \centering
+    \includegraphics[width=0.48\textwidth]{compare-methods-fixed-range.png}
+    \hspace{0.2cm}
+    \includegraphics[width=0.48\textwidth]{improvement--percentage.png}
+    
+    \begin{itemize}
+        \item \textbf{Robustness:} Our method (Regret Loss) stays low even at high noise ($\sigma=10$).
+        \item \textbf{Baseline Failure:} SPO+ diverges at high noise. MSE/Rank Loss plateau.
+    \end{itemize}
+\end{frame}
+
+%---------------------------------------------------------
+% CASE STUDY: Cancer Hospital
+%---------------------------------------------------------
+\begin{frame}{Case Study: Cancer Hospital Scheduling}
+    \textbf{Setting:} Outpatient Exam Scheduling at \textit{DayHospital} (US).
+    \begin{itemize}
+        \item $N \approx 200,000$ patient pathways.
+        \item Goal: Sequence exams to minimize congestion.
+        \item Uncertainty: Exam durations are highly variable.
+    \end{itemize}
+    
+    \vspace{0.5em}
+    
+    \begin{columns}
+        \column{0.6\textwidth}
+        \includegraphics[width=\textwidth]{LossComparison_Jan.png}
+        
+        \column{0.4\textwidth}
+        \textbf{Key Findings:}
+        \begin{itemize}
+            \item \textbf{11/12 Months:} Our method achieves lowest error.
+            \item \textbf{vs SPO+:} ~34\% error reduction.
+            \item \textbf{vs Ranking:} ~10\% error reduction.
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+%---------------------------------------------------------
+% CONCLUSION
+%---------------------------------------------------------
+\begin{frame}{Conclusion}
+    \Large
+    \begin{enumerate}
+        \item \textbf{Structure Matters:} Standard losses (MSE) ignore the problem. Standard surrogates (SPO+) ignore the algorithm's mechanics.
+        \item \textbf{White-Box Approach:} By differentiating through critical decisions (sorts, partitions), we get stable, high-quality gradients.
+        \item \textbf{Impact:} Proven robustness in synthetic tests and significant real-world gains in healthcare scheduling.
+    \end{enumerate}
+    
+    \vspace{1cm}
+    \centering
+    \textit{Code \& Paper available on request.}
+\end{frame}
+
+%---------------------------------------------------------
+% APPENDIX START
+%---------------------------------------------------------
+\appendix
+\section{Backup Slides}
+
+\begin{frame}{Theoretical Properties (Backup)}
+    The surrogate $L_{\mathrm{surr}}$ satisfies key properties:
+    
+    \vspace{0.5em}
+    \begin{enumerate}
+        \item \textbf{Differentiability:} Infinitely differentiable w.r.t. parameters $\omega$. Enables standard backprop.
+        \item \textbf{Tunable Sensitivity:} $\lambda$ acts as a temperature parameter.
+        \item \textbf{Consistency:}
+        \[ \lim_{\lambda \to 0} L_{\mathrm{surr}} \to \text{Exact Decision Regret} \]
+        \item \textbf{Decision-Weighted:}
+        Errors are penalized \emph{in proportion} to their downstream cost impact ($\phi_d$).
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Mathematical Details: SCT Weights}
+    Why is $R_{i,j} = (j-i)(y_j - y_i)$?
+    
+    \vspace{1em}
+    SCT is $\sum (n-k+1) y_{(k)}$.
+    
+    Swapping positions $i$ and $j$:
+    \begin{align*}
+        \Delta &= \text{Cost}(j, i) - \text{Cost}(i, j) \\
+               &= [(n-i+1)y_j + (n-j+1)y_i] - [(n-i+1)y_i + (n-j+1)y_j] \\
+               &= (y_j - y_i) [ (n-i+1) - (n-j+1) ] \\
+               &= (y_j - y_i) (j-i)
+    \end{align*}
+\end{frame}
+
+\end{document}

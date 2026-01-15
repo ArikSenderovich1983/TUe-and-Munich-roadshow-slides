@@ -1,0 +1,15 @@
+\subsection{Discussion \& Limitations}
+
+%Discuss the results, and interesting findings.
+From the synthetic data evaluation, we verify the capability of our approach to optimize schedules for BPSP problems in the presence of various levels of uncertainty and planned resource unavailability. We define the $k$ selection allowing us to save time and achieve 
+improved $M^*_\alpha$ of the problem. As for resource calendars, we observe the importance of selecting a $q_c$ that leads to producing $M^*_\alpha$  closer to the corresponding deterministic ones, thereby optimizing the utilization of available slots for the CP solver.
+The DayHospital experiment shows promising performance despite
+the limited clinical patient information available in the data (e.g., diagnosis, complexity, medical history). 
+The use of RIMS~\cite{MeneghelloFGR25} can potentially leverage
+%RIMS~\cite{MeneghelloFGR25} that we employ can potentially utilize 
+such information to significantly improve the
+estimation of activity durations.
+
+%\footnote{{In the supplementary material, we present two additional experiments using predictive models: one for synthetic data with a generated patient attribute affecting activity durations, and another for real data, leveraging temporal features to fit durations.}
+
+Below, we list several additional limitations of our work. As mentioned earlier, several simplified assumptions were necessary to apply process mining techniques and infer the BPSP problem from event logs. Additionally, comparisons with other methods addressing job duration uncertainty, if extended to incorporate planned resource unavailability, remain unexplored. Alternative job scheduling solvers could also be applied after defining the deterministic BPSP problem, leveraging the proposed Monte Carlo simulation to achieve the minimum probabilistic Makespan. Lastly, our approach focuses solely on minimizing the global Makespan, while resource-based objectives -- such as the minimization of costs or of idle resource times -- could better address organizational needs in BPSP problems.

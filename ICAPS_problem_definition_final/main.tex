@@ -1,0 +1,175 @@
+%%%% ijcai25.tex
+
+\typeout{IJCAI--25 Instructions for Authors}
+
+% These are the instructions for authors for IJCAI-25.
+
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
+% The file ijcai25.sty is a copy from ijcai22.sty
+% The file ijcai22.sty is NOT the same as previous years'
+\usepackage{ijcai25}
+
+% Use the postscript times font!
+\usepackage{times}
+\usepackage{soul}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[switch]{lineno}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb} 
+\usepackage{comment}
+\usepackage{xspace}
+\usepackage{enumitem}
+%\usepackage{hyperref}
+\newtheorem{define}{Definition}
+\newcommand{\attr}[1]{\textbf{#1}}
+\newcommand{\rimsTool}{$\textsc{RIMS}{\mathsf{_{Tool}}}$\xspace}
+\usepackage[dvipsnames]{xcolor} 
+\newcommand{\rims}{$\textsc{RIMS}$\xspace}
+\newcommand\btext[1]{{\color{blue}{#1}}}
+\newcommand\rtext[1]{{\color{red}{#1}}}
+\newcommand\massi[1]{{\color{orange}{#1}}}
+%\usepackage{bbding}
+\newcommand{\act}[1]{\textsf{\footnotesize #1}}
+%
+% These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor} 
+\usepackage{subfig}
+\usepackage[table,xcdraw]{xcolor}
+
+\usepackage{todonotes}
+
+% Comment out this line in the camera-ready submission
+%\linenumbers
+
+\urlstyle{same}
+
+% the following package is optional:
+%\usepackage{latexsym}
+
+% See https://www.overleaf.com/learn/latex/theorems_and_proofs
+% for a nice explanation of how to define new theorems, but keep
+% in mind that the amsthm package is already included in this
+% template and that you must *not* alter the styling.
+\newtheorem{example}{Example}
+\newtheorem{theorem}{Theorem}
+\newenvironment{proofsketch}{%
+  \renewcommand{\proofname}{Proof Sketch}\proof}{\endproof}
+% Following comment is from ijcai97-submit.tex:
+% The preparation of these files was supported by Schlumberger Palo Alto
+% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
+% Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
+% preparation.
+
+% These instructions can be modified and used in other conferences as long
+% as credit to the authors and supporting agencies is retained, this notice
+% is not changed, and further modification or reuse is not restricted.
+% Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
+% contacts for providing assistance without their prior permission.
+
+% To use for other conferences, change references to files and the
+% conference appropriate and use other authors, contacts, publishers, and
+% organizations.
+% Also change the deadline and address for returning papers and the length and
+% page charge instructions.
+% Put where the files are available in the appropriate places.
+
+
+% PDF Info Is REQUIRED.
+
+% Please leave this \pdfinfo block untouched both for the submission and
+% Camera Ready Copy. Do not include Title and Author information in the pdfinfo section
+\pdfinfo{
+/TemplateVersion (IJCAI.2025.0)
+}
+
+\title{Proactive Data-driven Scheduling of Business Processes}
+
+%%We acknowledge the support of the PNRR project FAIR - Future AI Research (PE00000013), under the NRRP MUR program funded by the NextGenerationEU, the HORIZON 2020 HumanE-AI project (Grant 952026)
+
+% Multiple author syntax (remove the single-author syntax above and the \iffalse ... \fi here)
+
+\author{
+Francesca Meneghello$^{1,2}$
+\and
+Arik Senderovich$^3$ \and
+Massimiliano Ronzani$^{1}$ \and
+Chiara Di Francescomarino$^4$ \and
+Chiara Ghidini$^5$\\
+\affiliations
+$^1$Fondazione Bruno Kessler, Via Sommarive, 18, POVO - 38123, Trento, Italy\\
+$^2$Sapienza University of Rome, Via Ariosto, 25, 00185, Rome, Italy \\
+$^3$York University, 4700 Keele St, Toronto,  ON M3J 1P3, Canada\\
+$^4$University of Trento, Via Sommarive, 9, 38123 Trento, Italy\\
+$^5$Free University of Bozen-Bolzano, via Bruno Buozzi, 1 - 39100, Bozen-Bolzano, Italy\\
+\emails
+\{fmeneghello, mronzani\}@fbk.eu,
+sariks@yorku.ca,
+c.difrancescomarino@unitn.it, chiara.ghidini@unibz.it
+}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    Proactive scheduling creates 
+robust offline schedules 
+that optimize resource utilization and minimize job flow times. 
+This work addresses scheduling challenges in business processes, often
+encountered in service systems, 
+which differ from traditional applications like manufacturing due to inherent uncertainties in activity durations, and human resource availability.
+We model the business process scheduling 
+problem (BPSP) as a variation of stochastic
+resource-constrained multi-project scheduling (RCMPSP), and 
+apply \emph{process mining} to infer unknown
+parameter values from historical event data. To overcome 
+the randomness in activity durations, we transform 
+the problem into its deterministic counterpart, and 
+prove that the latter provides a lower bound on the
+Makespan of the stochastic problem. Our approach integrates data-driven Monte Carlo simulation with constraint programming to generate proactive schedules.
+We evaluate our approach using synthetic datasets with varying levels of uncertainty and size.
+In addition, we apply the approach to a real-world dataset from an outpatient cancer hospital, demonstrating its effectiveness in optimizing the process Makespan by an average of 5\% to 14\%.
+\end{abstract}
+
+\input{sections/1_introduction}
+
+\input{sections/2_motivation_problem_def}
+
+
+
+\input{sections/3_method}
+
+\input{sections/4_evaluation}
+\input{sections/5_discussion}
+\input{sections/6_related_work}
+\input{sections/7_conclusion}
+
+% The file named.bst is a bibliography style file for BibTeX 0.99c
+\bibliographystyle{named}
+\bibliography{ijcai25}
+
+%\clearpage
+
+%\input{sections/supplementary_material}
+
+\end{document}
+

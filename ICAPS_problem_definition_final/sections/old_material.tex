@@ -1,0 +1,123 @@
+\subsection{Labeled Timed Petri Nets}
+\label{sec:LTPN}
+
+In this paper, we use Labeled Timed Petri Nets (LTPN) a subclass of Petri nets to represent the 
+stochastic scheduling problem. 
+A Petri net $\mathcal{N} = (E, P, F)$ is a directed graph consisting of a set of nodes, called places ($P$), and a set of transitions ($E$)~\cite{murata1989petri}. These nodes are connected by directed arcs, represented as the flow relation $F \subseteq (E \times P) \cup (P \times E)$. A Labeled Timed Petri Net (LTPN) is an extension, denoted as $\mathcal{N}^{LPTN} = (E, P, F, A, l, \tau)$, where $E$ contains two types of transitions: $E' \subseteq E$ as a set of timed transitions, and $E \backslash E'$ as a set of immediate transitions. The function $l : E' \rightarrow A$ is a labeling function that assigns labels from a set $A$ to the timed transitions, and $\tau : E' \rightarrow \mathbb{R}$ is a timing function that assigns durations to the timed transitions in $E'$.
+
+\textcolor{blue}{Arik continues here.}
+Finally, $P_r \subset P$ denotes the places that represent the resources involved in the process.
+
+Figure~\ref{fig:TPN} is an LTPN such that the activities \act{Blood Draw}, \act{Visits}, \act{Examination}, \act{Chemo. Infusion} define the timed transitions $E'$ while \{\act{Inv$_1$},....\act{Inv$_n$}\} $ \subset E'\backslash E$ the immediate transitions.
+The places are represented by circles, with those labeled \act{N}, \act{P}, and \act{IN} corresponding to $P_{r}$ the resources involved in the process: nurses (N), physicians (P), and infusion nurses (IN).
+The places $p_{Start}$ and $p_{End}$ correspond to the start and end points of the project, respectively.
+
+Given a transition $e \in E$, $\bullet e$ denotes the set of input places for a transition $e \in E$, which are the places $p \in P$ that have a directed arc from $p$ to $e$, i.e., $(p, e) \in F$. Similarly, $e \bullet$ indicates the set of output places, which are the places $p$ that have a directed arc from $t$ to $p$. Referring to the example in Figure~\ref{fig:TPN}, $\bullet$\act{Vitals} $=$ {$p5$} and \act{Vitals}$\bullet$ $=$ {$p7$, \act{N}}. At any time, a place can contain zero or more tokens, represented by black or colored dots, with the latter specifically representing resources. For instance, if \act{N} contains two dots, it means that two nurses are involved in the process.
+
+The state of an LPTN is determined by the distribution of tokens over places and is referred to as its marking. A marking of an LPTN is a function $M : P \rightarrow \mathbb{N}$ that maps each place to the number of tokens it contains, and the states change discretely by adding or removing tokens from places. A transition $t$ is enabled at a marking $m$ iff each input place contains at least one token, i.e., $\forall p \in \bullet e, m(p) \ge 0$. An enabled immediate transition can fire, while a timed transition $e' \in E'$ depends on its duration $\tau(e')$ i.e., firing requires a certain amount of time.
+Firing a transition $e$ at marking $m$ yields a new marking $m'$, denoted as $m \xrightarrow[]{e} m'$.
+$m_0$ and $m_t$ indicate respectively the initial and the target marking of LTPN, then a sequence of transition firing $s = \langle e_1, .... e_n \rangle \in E$ that leads from $m_0$ to $m_n$, such that $m_0 \xrightarrow[]{e_1} ... \xrightarrow[]{e_n} m_n$. 
+
+Figure~\ref{fig:TPN} represents the initial marking $m_0$, where only \act{Inv1} is enabled. Once that transition fires, the two tokens (the project token and the nurse token) merge into a single token, enabling the timed labelled transition \act{Blood Draw}. After the time $\tau($\act{Blood Draw}$)$ required to execute the transition, one token is produced for the \act{N} place (simulating the release of the resource) and one for another place.
+The process continues with the parallel execution of the \act{Visits} and \act{Examination} activities, performed by a nurse and a physician, respectively. Finally, the physician decides whether to proceed with the \act{Chemo. Infusion} based on the previous activities performed. Hence, the LTPN in Figure~\ref{fig:TPN} represents two possible paths of patients in the process. 
+
+
+%%% VERSION OF MOTIVATING EXAMPLE AND DEFINITION OF LTPN TOGETHER 
+\begin{comment}
+A Petri net $\mathcal{N} = (E, P, F)$ is a directed graph consisting of a set of nodes, called places ($P$), and a set of transitions ($E$)~\cite{murata1989petri}. These nodes are connected by directed arcs, represented as the flow relation $F \subseteq (E \times P) \cup (P \times E)$. A Labelled Timed Petri Net (LTPN) is an extension, denoted as $\mathcal{N}^{LPTN} = (E, P, F, A, l, \tau)$, where $E$ contains two types of transitions: $E' \subseteq E$ as a set of timed transitions, and $E \backslash E'$ as a set of immediate transitions. The function $l : E' \rightarrow A$ is a labelling function that assigns labels from a set $A$ to the timed transitions, and $\tau : E' \rightarrow \mathbb{R}$ is a timing function that assigns durations to the timed transitions in $E'$.
+
+Consider the LPTN in Figure~\ref{fig:TPN}, which represents a possible path in a hospital process. 
+It contains four labelled and timed transitions $E'$ (\act{Blood Draw}, \act{Visits}, \act{Examination}, \act{Chemo. Infusion}) represented by white rectangles, and seven immediate transitions represented by smaller black rectangles. The places are represented by circles, with those labelled \act{N}, \act{P}, and \act{IN} corresponding to the resources involved in the process: nurses (N), physicians (P), and infusion nurses (IN).
+The places \act{Start} and \act{End} correspond to the start and end points of the project, respectively.
+
+Given a transition $e \in E$, $\bullet e$ denotes the set of input places for a transition $e \in E$, which are the places $p \in P$ that have a directed arc from $p$ to $e$, i.e., $(p, e) \in F$. Similarly, $e \bullet$ indicates the set of output places, which are the places $p$ that have a directed arc from $t$ to $p$. Referring to the example in Figure~\ref{fig:TPN}, $\bullet$\act{Vitals} $=$ {$p5$} and \act{Vitals}$\bullet$ $=$ {$p7$, \act{N}}. At any time, a place can contain zero or more tokens, represented by black or colored dots, with the latter specifically representing resources. For instance, if \act{N} contains two dots, it means that two nurses are involved in the process.
+
+The state of an LPTN is determined by the distribution of tokens over places and is referred to as its marking. A marking of an LPTN is a function $M : P \rightarrow \mathbb{N}$ that maps each place to the number of tokens it contains, and the states change discretely by adding or removing tokens from places. A transition $t$ is enabled at a marking $m$ iff each input place contains at least one token, i.e., $\forall p \in \bullet e, m(p) \ge 0$. An enabled immediate transition can fire, while a timed transition $e' \in E'$ depends on its duration $\tau(e')$ i.e., firing requires a certain amount of time.
+Firing a transition $e$ at marking $m$ yields a new marking $m'$, denoted as $m \xrightarrow[]{e} m'$.
+$m_0$ and $m_t$ indicate respectively the initial and the target marking of LTPN, then a sequence of transition firing $s = \langle e_1, .... e_n \rangle \in E$ that leads from $m_0$ to $m_n$, such that $m_0 \xrightarrow[]{e_1} ... \xrightarrow[]{e_n} m_n$. 
+
+Figure~\ref{fig:TPN} represents the initial marking $m_0$, where only \act{Inv1} is enabled. Once that transition fires, the two tokens (the project token and the nurse token) merge into a single token, enabling the timed labelled transition \act{Blood Draw}. After the time $\tau($\act{Blood Draw}$)$ required to execute the transition, one token is produced for the \act{N} place (simulating the release of the resource) and one for another place.
+The process continues with the parallel execution of the \act{Visits} and \act{Examination} activities, performed by a nurse and a physician, respectively. Finally, the physician decides whether to proceed with the \act{Chemo. Infusion} based on the previous activities performed. Hence, the LTPN in Figure~\ref{fig:TPN} represents two possible paths of patients in the process. 
+\end{comment}
+
+%A LTPNs is a tupla $\mathcal{N} = \langle E, E', P, F, A, l, \tau \rangle$ where $E$ is a finite set of transitions with $E'\subseteq E$ a set of timed transitions and $E \backslash E'$ a set of immediate transitions, $P$ is a finite set of places and $F \subseteq E \, x \,  P \cup P \, x \, E$ is a set of directed arcs, called the flow relation. $A$ is a set of activity labels, and $l \in E' \rightarrow A$ is a labeling function. Finally, $\tau$ is a function $E' \rightarrow \mathbb{R}$ that assigns durations to timed transitions.
+
+
+
+\subsection{Mapping LPTN to S-RCMSPS}
+
+Starting from the LPTN, we can directly derive the corresponding stochastic(S) RCMSPS. To achieve this, we employ the method proposed by~\cite{senderovich2019learning} and extend it to represent both stochastic durations and resource calendars.
+
+Following the definition of the S-RCMSPS problem, we present the translation from an LPTN to the corresponding S-RCMSPS.
+
+\begin{define}[LTPN to S-RCMSPS]
+Given an LTPN and an initial marking, $(\mathcal{N}^{LPTN} = (E, P, F, A, l, \tau), m_0)$, the S-RCMSPS is created as follows:
+\begin{itemize}
+    \item A project $i \in \mathcal{I}$ is defined for each tokens in $p_{start}$, with $|p_{start}| = |\mathcal{I}|$
+    \item $N_i$ of project $i$ is based on the path in $\mathcal{N}^{LPTN}$ that token $t$ has to follow to reach $p_{end}$. Specifically, from the sequence of firings of a token $t$, $s_t = \langle e_1, .... e_n \rangle \in E$ we select only the timed transitions $N_i = \{l(e') \; | \; \forall e' \in s_t\}$.
+    \item The precedence relations inside $N_i$ is given by, $\Pi_i = \{ (n_{iw}, n_{iz}) \, | \, n_{iw} = l(e'_w) \, \wedge \, n_{iz} = l(e'_z) \, \wedge \, e'_w \rightarrow e'_z \}$ with $e'_w \rightarrow e'_z$ being true if $e'_w$ occurs before $e'_z$ in $\mathcal{N}^{LPTN}$
+    \item The resource set is given by the set of resource place, $\mathcal{R} = P_r$ and $C_k$ is defined based on the number of tokens $|P_{r_k}|$ in the initial marking $m_0$
+    \item Given $e'$ representing the activity $n_{ij}$, the consumption of resource $c_{ij}$ is defined by the input resource places, $\bullet e' \subseteq P_r$ and $d_{ij}$ correspond to $\tau(e')$
+\end{itemize}
+\end{define}
+
+
+
+\begin{table*}[h]
+\centering
+\caption{Kendall Tau metrics: $\frac{(C-D)}{(C+D)}$ where $C$ represents the number of concordant pairs and $D$ represents the number of discordant pairs. $\tau_{0.1} = (7-4)/(7+4) = 0.27$}
+\scalebox{0.90}{
+\begin{tabular}{l@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}c@{\hskip 0.1in}}
+\toprule
+\textbf{Name} & \textbf{Size} & \textbf{Unc.} & \textbf{\#Sim} & $q_{value}$ & $D_{DET}$ & $D_{alpha}$ &
+$\mu_{SIM}$ & $\sigma_{SIM}$ & Ranking$_{DET}$ & Ranking$_{PROB}$\\
+& & \textbf{Level} &  & &  & & &  & & \\
+\midrule
+
+\multirow{10}{*}{abz6} & \multirow{10}{*}{10 X 10} & \multirow{10}{*}{0.1} & \multirow{10}{*}{1000} & \multirow{10}{*}{0.663}& 1099 & 1100.789 & 1075.088 & 16.006 & 11 &  11\\
+&  &  &  &  & 1098 & 1032.129 & 1008.824 & 13.481 & 10 & 10\\
+&  &  &  &  & 1020 & 1023.122 & 999.844 & 13.885 & 9 & 9\\
+&  &  &  &  & 1009 & 1012.848 & 986.749 & 15.790 & 8 & 8\\
+&  &  &  &  & 993 & 992.600 & 968.395 & 13.564 & 7 & \underline{6} \\
+&  &  &  &  & 992 & 991.965 & 969.105 & 14.459 & 6 & \underline{7}\\
+&  &  &  &  & 985 & 984.544 & 961.937 & 12.945 & 5 & 5\\
+&  &  &  &  & 976 & 981.818 & 960.354 & 12.461 & 4 & 4\\
+&  &  &  &  & 973 & 978.818 & 956.565 & 12.761 & 3 & \underline{2}\\
+&  &  &  &  & 972 & 978.448 & 958.575 & 11.809 & 2 & \underline{3}\\
+&  &  &  &  & \colorbox{yellow}{971} & \colorbox{yellow}{976.627} & 955.858 & 12.658 & 1 & 1\\
+\midrule
+\multirow{17}{*}{abz6} & \multirow{17}{*}{10 X 10} & \multirow{17}{*}{0.5} & \multirow{17}{*}{1000} & \multirow{17}{*}{0.663}& 1180 & 1209.659 & 1101.562 & 63.845 & 17 & \underline{15}\\
+&  &  &  &  & 1166 & 1203.719 & 1095.272 & 64.500 & 16 & \underline{13}\\
+&  &  &  &  & 1150 & 1194.403 & 1101.857 & 55.855 & 15 & \underline{11}\\
+&  &  &  &  & 1146 & 1201.416 & 1102.451 & 57.850 & 14 & \underline{12}\\
+&  &  &  &  & 1145 & 1211.513 & 1112.775 & 58.055 & 13 &  \underline{16}\\
+&  &  &  &  & 1139 & 1211.560 & 1117.581 & 54.006 & 12 & \underline{17}\\
+&  &  &  &  & 1138 & 1205.774 & 1114.074 & 54.002 & 11 & \underline{13}\\
+&  &  &  &  & 1133 & 1179.867 & 1083.465 & 57.152 & 10 & 10\\
+&  &  &  &  & 1131 & 1174.709 & 1077.325 & 55.202 & 9 & 9\\
+&  &  &  &  & 1130 & 1172.610 & 1072.796 & 57.174 & 8 & \underline{5}\\
+&  &  &  &  & 1125 & 1173.187 & 1079.894 & 53.504 & 7 & \underline{6}\\
+&  &  &  &  & 1123 & 1165.490 & 1078.271 & 52.660 & 6 & \underline{2}\\
+&  &  &  &  & 1121 & 1173.881 & 1079.883 & 56.342 & 5 & \underline{7}\\
+&  &  &  &  & 1117 & 1169.416 & 1071.345 & 58.627 & 4 & \underline{3}\\
+&  &  &  &  & 1116 & \colorbox{yellow}{1165.397} & 1062.345 & 61.568 & 3 & \underline{1}\\
+&  &  &  &  & 1115 & 1170.846 & 1082.280 & 54.992 & 2 & \underline{4}\\
+&  &  &  &  & \colorbox{yellow}{1114} & 1177.483 & 1079.376 & 55.982 & 1 & \underline{8}\\
+\midrule
+\multirow{12}{*}{abz6} & \multirow{12}{*}{10 X 10} & \multirow{12}{*}{1} & \multirow{12}{*}{1000} & \multirow{12}{*}{0.663}& 1328 & 1386.059 & 1227.822 & 88.073 & 12 & \underline{10}\\
+&  &  &  &  & 1300 & 1352.320 & 1216.442 & 84.863 & 11 & \underline{2}\\
+&  &  &  &  & 1282 & 1390.128 & 1239.988 & 85.501 & 10 & \underline{11}\\
+&  &  &  &  & 1276 & \colorbox{yellow}{1346.128} & 1210.492 & 82.739 & 9 & \underline{1}\\
+&  &  &  &  & 1268 & 1417.516 & 1263.462 & 85.722 & 8 & \underline{12}\\
+&  &  &  &  & 1261 & 1376.925 & 1219.810 & 93.901 & 7 & \underline{7}\\
+&  &  &  &  & 1256 & 1384.173 & 1219.903 & 94.138 & 6 & \underline{9}\\
+&  &  &  &  & 1244 & 1360.914 & 1207.348 & 86.688 & 5 & \underline{3}\\
+&  &  &  &  & 1243 & 1376.867 & 1228.142 & 86.291 & 4 & \underline{8}\\
+&  &  &  &  & 1242 & 1374.822 & 1228.975 & 86.330 & 3 & \underline{5}\\
+&  &  &  &  & 1241 & 1374.132 & 1221.080 & 86.971 & 2 & \underline{4}\\
+&  &  &  &  & \colorbox{yellow}{1240} & 1375.860 & 1222.953 & 89.360 & 1 & \underline{6}\\
+\bottomrule
+\end{tabular}}
+%\caption{Cycle Time Distribution Distance and Conformance score}
+\label{tab:resultNotCalendar}
+\end{table*}

@@ -1,0 +1,36 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Proactive and Data-Driven Scheduling}
+
+%During the execution of real-world business processes, many random events occur, such as activities taking longer or shorter than expected due to various issues, and/or resources not being consistently available. 
+%Therefore, it is necessary to account for the uncertainties when addressing the scheduling problem in business processes by using RCMPSP variants.
+
+
+To the best of our knowledge, no other work combines together the unique features that characterize BPSP and that differentiate it from RCPSP, namely uncertain durations and resource unavailability.
+Several papers have studied the uncertainty in job durations such as \cite{satic2022performance,liu2020multi,hauder2020resource,chen2019research,beck2007proactive,GomezBD23}; yet those works do not address resource unavailability.
+
+In contrast, there are few papers on RCPSP constrained by resource time-window, mainly for human resources with working time constraints, resources with planned maintenance attributes~\cite{ding2023extensions} or resource calendars \cite{kreter2018mixed}. \cite{tian2018optimizing} address resource unavailability planning by defining randomly generated periods during which certain resources are unavailable. However, these works do not address duration uncertainty.
+%Indeed, there are few papers on RCPSP/RCPSP constrained by resource time-window, mainly for human resources with working time constraints, resources with planned maintenance attributes, and renting resources \cite{ding2023extensions}. \cite{kreter2018mixed} introduced the resource calendar to describe the unavailability of resources in the study of resource availability costs, but does not address job duration uncertainty as in the works of \cite{yang2020multi,winklehner2022flexible}.
+
+%Business processes are also characterized by variability in project paths, which many approaches, such as \cite{satic2022performance,tian2018optimizing}, cannot handle due to computational intractability. The basic relationship between jobs in the RCMSPS is the end-start relationship, which establishes that a job cannot begin execution until all its predecessor jobs have been fully completed. Meanwhile, in business processes, some jobs can be executed simultaneously, as addressed in \cite{tian2018optimizing}.
+%\cite{senderovich2019learning,vcapek2012production} works overcome the problem of handling a large number of project variants by also considering the possibility of concurrent job execution using a particular Petri net structure; however, they do not account for the stochastic nature of durations and resources.
+%\cite{tian2018optimizing} address resource unavailability planning by defining randomly generated periods during which certain resources are unavailable. 
+
+Lastly,  the majority of studies test their solutions using generated instances, while only a small portion, about 11\%, utilize real-world-based instances \cite{sanchez2023survey}. 
+The only exception is the work of \cite{senderovich2019learning}.
+Our approach extends \cite{senderovich2019learning} by incorporating stochastic activity
+durations, as well as by discovering duration distributions and resource calendars from event data. 
+
+\paragraph{Resource Allocation in Process Mining}
+
+Several works in process mining have addressed the problem of resource allocation, which aims to ensure that each activity in a process case is executed at the right time and with the right resources \cite{Kumar_2002}.
+Much of the research in this area focuses on online resource allocation, involving reactive scheduling where tasks are dynamically assigned to resources at runtime. These strategies are particularly useful in settings where information becomes available over time, such as the appearance of unexpected cases or unforeseen resource unavailability. Various techniques have been proposed to address these problems, including batch allocation strategies \cite{Delias_2011,Arias2018HumanRA,Zeng_2005}, predictive allocation \cite{Park_2019}, reinforcement learning approaches \cite{HUANG2011127,Zbikowski_2023,MIDDELHUIS2025102492,BEEREPOOT2023103837,Meneghello_2024}, as well as formulations based on assignment problems or parallel machine scheduling \cite{Kunkler_2024}.
+
+Fewer works have explored offline scheduling, where an initial schedule or roster is required from the outset. For instance, in \cite{Havur_2022}, the problem is formalized as an Answer Set Programming (ASP) formulation, enabling an ASP solver to compute a schedule. Similarly, \cite{Aalst_1996,DOERNER20061798} use a Petri net formalization of control flow and resource perspectives, solving the problem through the reachability graph. Notably, only \cite{DOERNER20061798} considers stochasticity in activity durations. These approaches lack mechanisms to ensure schedule robustness under temporal fluctuations. In this context, \cite{DiCunzolo_2024} is the only work that integrates operations research with PPM predictive models to produce robust schedules.
+Despite these advances, none of the existing methods considers planned resource unavailabilities in a proactive setting.
+
+
+
+
+
