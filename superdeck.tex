@@ -99,25 +99,30 @@
 \end{frame}
 
 \begin{frame}{What is Business Process Optimization (BPO)?}
-  \btext{BPO} = making \emph{optimal} operational decisions during process execution (and designing policies for them).
+  \begin{columns}[T]
+    \column{0.72\textwidth}
+      \btext{BPO} = making \emph{optimal} operational decisions during process execution
+      (and designing policies for them).
 
-  \vspace{0.3cm}
-  \begin{itemize}
-    \item<1-> \btext{Decisions}: \emph{what to do next} and \emph{with which resources}.
-    \item<2-> \btext{Objectives}: time, cost, throughput, service levels, customer experience.
-    \item<3-> \btext{Constraints}: capacity, calendars, deadlines, policies.
-    \item<4-> \btext{Hard part}: uncertainty in arrivals, durations, and paths.
-  \end{itemize}
+      \vspace{0.35cm}
+      \begin{itemize}
+        \item \btext{Decisions}: \emph{what to do next} and \emph{with which resources}.
+        \item \btext{Objectives}: time, cost, throughput, service levels, customer experience.
+        \item \btext{Constraints}: capacity, calendars, deadlines, policies.
+        \item \btext{Hard part}: uncertainty in arrivals, durations, and paths.
+      \end{itemize}
 
-  \vspace{0.35cm}
-  \begin{block}{A simple taxonomy of BPO problem types (operational level)}
-    \begin{itemize}
-      \item<5-> \btext{Task prioritization} \& \btext{resource allocation} (dispatching)
-      \item<6-> \btext{Case admission} \& \btext{case scheduling} \hfill \btext{(focus today)}
-      \item<7-> \btext{Staffing} (dynamic capacity decisions)
-      \item<8-> \btext{Path choice} (routing / treatment options)
-    \end{itemize}
-  \end{block}
+      \vspace{0.15cm}
+      \small
+      In a moment, we’ll zoom in on \btext{scheduling} as a canonical BPO problem.
+
+    \column{0.28\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{process.pdf}
+      \vspace{0.1cm}
+      \scriptsize
+      A running process example.
+  \end{columns}
 \end{frame}
 
 \begin{frame}{How do we solve BPO problems? (a reusable blueprint)}
@@ -163,6 +168,30 @@
 % 2) IJCAI'25 Proactive BPSP
 % ==========================================================
 \section{Lens 1: Proactive scheduling of business processes from event logs}
+
+\begin{frame}{A simple taxonomy of BPO problem types (operational level)}
+  \begin{columns}[T]
+    \column{0.68\textwidth}
+      \begin{itemize}
+        \item \btext{Task prioritization} \& \btext{resource allocation} (dispatching)
+        \item \btext{Case admission} \& \btext{case scheduling} \hfill \btext{(focus today)}
+        \item \btext{Staffing} (dynamic capacity decisions)
+        \item \btext{Path choice} (routing / treatment options)
+      \end{itemize}
+
+      \vspace{0.35cm}
+      \begin{block}{Today’s focus}
+        Scheduling: turning a BPM model + data into concrete, robust operational plans.
+      \end{block}
+
+    \column{0.32\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{bpmn.png}
+      \vspace{0.1cm}
+      \scriptsize
+      A process induces precedence and resource constraints.
+  \end{columns}
+\end{frame}
 
 \begin{frame}{Problem: Proactive Business Process Scheduling (BPSP)}
   \begin{columns}[T]
