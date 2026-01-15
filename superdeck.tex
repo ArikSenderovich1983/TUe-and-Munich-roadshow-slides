@@ -87,51 +87,55 @@
 % ==========================================================
 \section{Motivation: BPO as decision-making under uncertainty}
 
-\begin{frame}{What is Business Process Optimization (BPO)?}
-  \begin{columns}[T]
-    \column{0.62\textwidth}
-      \btext{BPO} = making \emph{optimal} decisions during process execution and redesign.
-      \vspace{0.3cm}
-
-      \begin{itemize}
-        \item \btext{Decisions}: which case next, which resource, when to admit/schedule, where to route.
-        \item \btext{Objectives}: time, cost, service levels, customer experience.
-        \item \btext{Constraints}: capacity, calendars, deadlines, policies.
-        \item \btext{Hard part}: uncertainty in arrivals, durations, and paths.
-      \end{itemize}
-
-      \vspace{0.2cm}
-      \small
-      Today: one canonical BPO problem---\btext{case scheduling}.
-
-    \column{0.38\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{process.pdf}
-      \vspace{0.1cm}
-      \scriptsize
-      Example process with multiple decision points.
-  \end{columns}
+\begin{frame}{BPO in one picture: a process with decision points}
+  \begin{center}
+    % Make the BPMN visual dominant (readable in a large room).
+    \includegraphics[width=0.98\textwidth,height=0.78\textheight,keepaspectratio]{process.pdf}
+  \end{center}
+  \vspace{-0.15cm}
+  \scriptsize
+  \color{darkgray}
+  Example: a single process model already contains multiple BPO decision points (appointment, routing, rework trade-offs).
 \end{frame}
 
-\begin{frame}{A simple taxonomy: where scheduling fits}
-  \begin{columns}[T]
-    \column{0.62\textwidth}
-      \begin{block}{Operational decisions (during execution)}
-        \begin{itemize}
-          \item \btext{Task prioritization}: which waiting work item next?
-          \item \btext{Resource allocation}: which resource executes it?
-          \item \btext{Admission / case scheduling}: when to release or appoint a case?
-          \item \btext{Path choice}: which route / option for this case?
-        \end{itemize}
-      \end{block}
-      \vspace{0.1cm}
-      \btext{Key message:} scheduling is the ``glue'' between BPM models and operational performance.
+\begin{frame}{What is Business Process Optimization (BPO)?}
+  \btext{BPO} = making \emph{optimal} operational decisions during process execution (and designing policies for them).
 
-    \column{0.38\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{framework.pdf}
-      \scriptsize
-      BPO solution components: problem, data/uncertainty, model, method, evaluation.
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item<1-> \btext{Decisions}: \emph{what to do next} and \emph{with which resources}.
+    \item<2-> \btext{Objectives}: time, cost, throughput, service levels, customer experience.
+    \item<3-> \btext{Constraints}: capacity, calendars, deadlines, policies.
+    \item<4-> \btext{Hard part}: uncertainty in arrivals, durations, and paths.
+  \end{itemize}
+
+  \vspace{0.35cm}
+  \begin{block}{A simple taxonomy of BPO problem types (operational level)}
+    \begin{itemize}
+      \item<5-> \btext{Task prioritization} \& \btext{resource allocation} (dispatching)
+      \item<6-> \btext{Case admission} \& \btext{case scheduling} \hfill \btext{(focus today)}
+      \item<7-> \btext{Staffing} (dynamic capacity decisions)
+      \item<8-> \btext{Path choice} (routing / treatment options)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{How do we solve BPO problems? (a reusable blueprint)}
+  \begin{center}
+    \includegraphics[width=0.93\textwidth]{framework.pdf}
+  \end{center}
+  \vspace{-0.1cm}
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \begin{itemize}
+        \item \btext{Problem description}: decision, objective, constraints, state
+        \item \btext{Data \& uncertainty}: event logs $\rightarrow$ distributions/calendars
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{itemize}
+        \item \btext{Modeling}: CP/MIP/queues/MDPs (as appropriate)
+        \item \btext{Method \& evaluation}: solve/heuristics + simulation/replay
+      \end{itemize}
   \end{columns}
 \end{frame}
 
