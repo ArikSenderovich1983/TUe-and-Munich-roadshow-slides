@@ -166,6 +166,42 @@
 \end{frame}
 
 % ==========================================================
+% Shared case study (used in both Lens 1 and Lens 2)
+% ==========================================================
+\begin{frame}{Shared case study: DayHospital (U.S.\ outpatient cancer clinic)}
+  \begin{columns}[T]
+    \column{0.62\textwidth}
+      \begin{block}{Why this case study is a good stress test}
+        \begin{itemize}
+          \item high volume, high variability, many resources with calendars
+          \item operational stakes: congestion \(\rightarrow\) patient experience and throughput
+          \item rich event logs: we can \btext{learn} uncertainty and \btext{evaluate} interventions
+        \end{itemize}
+      \end{block}
+
+      \begin{block}{Two lenses, same setting}
+        \begin{itemize}
+          \item \btext{Lens 1 (IJCAI'25)}: proactive schedules \(\rightarrow\) improve makespan
+          \item \btext{Lens 2 (IJCAI'26)}: SASS learn-to-schedule \(\rightarrow\) reduce SCT regret
+        \end{itemize}
+      \end{block}
+
+    \column{0.38\textwidth}
+      \centering
+      \fbox{\parbox{0.95\textwidth}{
+        \vspace{0.15cm}
+        \centering
+        \textbf{Placeholder visual}\\
+        clinic / patient-flow photo or icon\\
+        \vspace{0.15cm}
+      }}
+      \vspace{0.1cm}
+      \scriptsize
+      Suggestion: generate a simple ``clinic + queues'' illustration in ChatGPT UI.
+  \end{columns}
+\end{frame}
+
+% ==========================================================
 % 2) IJCAI'25 Proactive BPSP
 % ==========================================================
 \section{Lens 1: Proactive scheduling of business processes from event logs}
@@ -249,71 +285,88 @@
 \end{frame}
 
 \begin{frame}{The gap we target (and the design principle)}
-  \begin{columns}[T]
-    \column{0.55\textwidth}
-      \begin{block}{Gap}
-        Business processes add two friction points that break ``standard'' scheduling:
-        \begin{itemize}
-          \item \btext{planned resource unavailability} (calendars)
-          \item \btext{parameter extraction} from logs (durations, variability, resources)
-        \end{itemize}
-      \end{block}
-      \begin{block}{Design principle}
-        \btext{Optimize} deterministically (CP) \;+\; \btext{validate} under uncertainty (simulation).
-      \end{block}
+  \begin{block}{Gap}
+    Business processes add two friction points that break ``standard'' scheduling:
+    \begin{itemize}
+      \item \btext{planned resource unavailability} (calendars)
+      \item \btext{parameter extraction} from logs (durations, variability, resources)
+    \end{itemize}
+  \end{block}
 
-    \column{0.45\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{pipeline_rims3.png}
-      \vspace{0.1cm}
-      \scriptsize
-      End-to-end pipeline (paper figure).
-  \end{columns}
+  \begin{block}{Design principle}
+    \btext{Optimize} deterministically (CP) \;+\; \btext{validate} under uncertainty (simulation).
+  \end{block}
 \end{frame}
 
-\begin{frame}{Stochastic to deterministic: ``mean + buffer''}
-  \begin{columns}[T]
-    \column{0.62\textwidth}
-      Turn random durations into deterministic ones:
-      \[
-        d = \mu + q \cdot \sigma
-      \]
-      \begin{itemize}
-        \item \(q\) controls robustness: higher \(q\) \(\Rightarrow\) more buffer.
-        \item With a principled \(q\), deterministic makespan lower-bounds the probabilistic objective.
-      \end{itemize}
-
-      \vspace{0.2cm}
-      \btext{Slide placeholder (optional)}:
-      add a small visual of a distribution with shaded tail (generate in ChatGPT UI).
-
-    \column{0.38\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{distribution_predictions.png}
-      \scriptsize
-      (Paper figure) durations as distributions rather than point estimates.
-  \end{columns}
+\begin{frame}{BPSP solution pipeline (end-to-end)}
+  \begin{center}
+    \includegraphics[width=0.98\textwidth,height=0.78\textheight,keepaspectratio]{pipeline_rims3.png}
+  \end{center}
+  \vspace{-0.15cm}
+  \scriptsize
+  \color{darkgray}
+  From event logs \(\rightarrow\) parameter estimation \(\rightarrow\) deterministic CP \(\rightarrow\) simulation-based selection.
 \end{frame}
 
-\begin{frame}{Calendars matter: planned unavailability as constraints}
-  \begin{columns}[T]
-    \column{0.58\textwidth}
-      In CP, resources are not continuously available.
-      \begin{itemize}
-        \item ``Unavailable'' periods block execution.
-        \item Schedule must respect both \btext{capacity} and \btext{calendar} feasibility.
-        \item Practical viewpoint: treat vacations as fixed ``dummy intervals'' that must not overlap.
-      \end{itemize}
+\begin{frame}{Uncertainty from logs: durations are distributions, not constants}
+  \begin{center}
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{distribution_predictions.png}
+  \end{center}
+  \vspace{-0.15cm}
+  \scriptsize
+  \color{darkgray}
+  Process mining yields variability (e.g., \(\mu,\sigma\)) rather than a single duration per activity.
+\end{frame}
 
-      \vspace{0.2cm}
-      \btext{Recommendation}: include a simple calendar strip (work hours) for one resource.
+\begin{frame}{Stochastic \(\rightarrow\) deterministic via a buffered duration}
+  Turn random durations into deterministic ones:
+  \[
+    d \;=\; \mu \;+\; q \cdot \sigma
+  \]
+  \vspace{0.1cm}
+  \begin{itemize}
+    \item \(q\) is an \btext{uncertainty coefficient}: higher \(q\) \(\Rightarrow\) more buffer.
+    \item We solve the deterministic problem, then evaluate robustness by simulation.
+  \end{itemize}
+\end{frame}
 
-    \column{0.42\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{calendars.png}
-      \scriptsize
-      Example resource calendars (paper figure).
-  \end{columns}
+\begin{frame}{Key guarantee (informal theorem): a lower bound for robust makespan}
+  \begin{block}{Theorem (lower-bound guarantee, informal)}
+    For confidence level \(1-\alpha\), if we choose
+    \[
+      q \;=\; q_U \;=\; \frac{\Phi^{-1}(1-\alpha)}{\sqrt{U}},
+    \]
+    then the makespan of the resulting deterministic schedule is a \btext{lower bound}
+    on the \((1-\alpha)\)-probabilistic makespan target \(M_\alpha^\star\).
+  \end{block}
+
+  \begin{block}{Why it still works with calendars (intuition)}
+    Model planned unavailability as fixed ``dummy'' intervals (vacations) and express feasibility as
+    precedence-style constraints; then the classical proactive-scheduling argument applies.
+  \end{block}
+
+  \scriptsize
+  \color{darkgray}
+  (Based on Beck \& Wilson’s proactive scheduling analysis; extended in IJCAI’25 draft to handle calendars.)
+\end{frame}
+
+\begin{frame}{Resource calendars (planned unavailability)}
+  \begin{center}
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{calendars.png}
+  \end{center}
+  \vspace{-0.15cm}
+  \scriptsize
+  \color{darkgray}
+  Real operations: calendars, shifts, and vacations constrain feasible schedules.
+\end{frame}
+
+\begin{frame}{How we model calendars in CP (one idea, big payoff)}
+  In CP, resources are not continuously available:
+  \begin{itemize}
+    \item ``Unavailable'' periods block execution.
+    \item Feasibility must respect both \btext{capacity} and \btext{calendar}.
+    \item Practical viewpoint: treat vacations as fixed \btext{dummy intervals} that must not overlap.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Why CP + top-$K$ + Monte Carlo?}
@@ -521,41 +574,48 @@
   \btext{Loss:} penalize misordered pairs smoothly, proportional to \(R_{i,j}\).
 \end{frame}
 
-\begin{frame}{Results: synthetic evaluation (stability + scalability)}
+\begin{frame}{Synthetic results I: stability under noise}
   \begin{center}
-    \includegraphics[width=0.48\textwidth]{new_plot/linearDataset_problem1.png}\hfill
-    \includegraphics[width=0.48\textwidth]{new_plot/analysis_number_of_pairs.png}
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{new_plot/linearDataset_problem1.png}
   \end{center}
-  \vspace{-0.1cm}
-  \begin{itemize}
-    \item \btext{Stability}: SASS is more stable than SPO+ under increasing noise.
-    \item \btext{Scalability}: pairwise sampling is sufficient (e.g., \(\sim10{,}000\) pairs can already reach low SCT error).
-  \end{itemize}
+  \vspace{-0.15cm}
+  \scriptsize
+  \color{darkgray}
+  SASS remains stable vs.\ SPO+ as noise increases (relative SCT error vs.\ optimal schedule).
 \end{frame}
 
-\begin{frame}{Real-world: DayHospital outpatient scheduling (sequencing exams)}
-  \begin{columns}[T]
-    \column{0.58\textwidth}
-      \btext{Setting}:
-      \begin{itemize}
-        \item outpatient exams (single-resource sequencing per day)
-        \item durations uncertain; features from logs
-        \item objective: reduce congestion (SCT)
-        \item evaluation over \btext{Jan--Dec 2021} (one full year)
-      \end{itemize}
-      \vspace{0.2cm}
-      \btext{Why it matters to BPM}:
-      \begin{itemize}
-        \item predictions are not the end goal
-        \item the goal is \btext{better schedules} (patient experience + throughput)
-      \end{itemize}
+\begin{frame}{Synthetic results II: scalability via sampled pairs}
+  \begin{center}
+    \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{new_plot/analysis_number_of_pairs.png}
+  \end{center}
+  \vspace{-0.15cm}
+  \scriptsize
+  \color{darkgray}
+  A subset of sampled pairs can already reach low SCT error (e.g., \(\sim10{,}000\) pairs).
+\end{frame}
 
-    \column{0.42\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{LossComparison_Jan.png}
-      \scriptsize
-      Example training dynamics on one month (paper figure).
-  \end{columns}
+\begin{frame}{DayHospital outpatient sequencing: the learning task (one slide)}
+  \btext{Task:} sequence outpatient exams each day to reduce congestion (\btext{SCT} objective).
+  \vspace{0.2cm}
+  \begin{itemize}
+    \item Inputs: features from logs (location, scheduled time, department, etc.)
+    \item Uncertainty: true durations vary substantially
+    \item Evaluation: \btext{relative SCT error} vs.\ the optimal ordering (Jan--Dec 2021)
+  \end{itemize}
+  \vspace{0.2cm}
+  \begin{block}{Connection to BPM}
+    Better schedules (not better MSE) \(\rightarrow\) better patient flow and throughput.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Example: training dynamics on one month (January)}
+  \begin{center}
+    \includegraphics[width=0.92\textwidth,height=0.75\textheight,keepaspectratio]{LossComparison_Jan.png}
+  \end{center}
+  \vspace{-0.15cm}
+  \scriptsize
+  \color{darkgray}
+  Relative SCT error during training on the real-world dataset (Jan 2021).
 \end{frame}
 
 \begin{frame}{DayHospital results (headline slide)}
