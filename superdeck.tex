@@ -219,24 +219,56 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Core gap: calendars + uncertainty + process mining}
-  \begin{itemize}
-    \item Proactive scheduling handles \btext{uncertain durations} (classical OR / AI scheduling).
-    \item BPM execution adds \btext{planned unavailability} and \btext{parameter estimation}.
-  \end{itemize}
+\begin{frame}{BPSP research landscape: where does this sit?}
+  \begin{columns}[T]
+    \column{0.62\textwidth}
+      \begin{block}{Three communities, three partial answers}
+        \begin{itemize}
+          \item \btext{BPM/BPO}: control-flow + event logs, but limited scheduling realism
+          \item \btext{Scheduling/OR}: strong models/algorithms, often assumes parameters are given
+          \item \btext{Proactive/robust scheduling}: handles uncertainty, rarely captures BPM calendars + data extraction
+        \end{itemize}
+      \end{block}
 
-  \vspace{0.3cm}
-  \begin{block}{Design principle}
-    Build schedules with \btext{optimization} (CP) but \btext{validate under uncertainty} (simulation).
-  \end{block}
+      \begin{block}{What is still missing in practice?}
+        A pipeline that is simultaneously \btext{BPM-aware}, \btext{data-driven}, and \btext{uncertainty-aware}.
+      \end{block}
 
-  \vspace{0.3cm}
-  \begin{center}
-    \includegraphics[width=0.83\textwidth]{pipeline_rims3.png}
-    \vspace{0.1cm}
-    \scriptsize
-    End-to-end pipeline (paper figure).
-  \end{center}
+    \column{0.38\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{pipeline_rims3.png}
+      \vspace{0.1cm}
+      \scriptsize
+      (Preview) We build an end-to-end pipeline.
+  \end{columns}
+
+  \vspace{0.15cm}
+  \scriptsize
+  \color{darkgray}
+  Representative foundations: RCPSP / proactive scheduling (Beck \& Wilson), process mining (van der Aalst), scheduling textbooks (Pinedo).
+\end{frame}
+
+\begin{frame}{The gap we target (and the design principle)}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \begin{block}{Gap}
+        Business processes add two friction points that break ``standard'' scheduling:
+        \begin{itemize}
+          \item \btext{planned resource unavailability} (calendars)
+          \item \btext{parameter extraction} from logs (durations, variability, resources)
+        \end{itemize}
+      \end{block}
+      \begin{block}{Design principle}
+        \btext{Optimize} deterministically (CP) \;+\; \btext{validate} under uncertainty (simulation).
+      \end{block}
+
+    \column{0.45\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{pipeline_rims3.png}
+      \vspace{0.1cm}
+      \scriptsize
+      End-to-end pipeline (paper figure).
+  \end{columns}
 \end{frame}
 
 \begin{frame}{Stochastic to deterministic: ``mean + buffer''}
@@ -381,7 +413,43 @@
 % ==========================================================
 % 3) IJCAI'26 Predict-and-Schedule (white-box surrogate)
 % ==========================================================
-\section{Lens 2: Smart Predict-and-Schedule (OR-Informed ML)}
+\section{Lens 2: Learning to Schedule with SASS (Structure-Aware Surrogates)}
+
+\begin{frame}{Learning to schedule: research landscape}
+  \begin{columns}[T]
+    \column{0.62\textwidth}
+      \begin{block}{Common paradigms}
+        \begin{itemize}
+          \item \btext{Predict-then-optimize}: learn durations (MSE), then apply a rule (SPT/EDD/FIFO)
+          \item \btext{Learn-to-rank (LTR)}: learn an ordering surrogate, not the scheduling objective
+          \item \btext{SPO / decision-focused learning}: train predictors to reduce downstream regret
+        \end{itemize}
+      \end{block}
+
+      \begin{block}{The pain point in scheduling}
+        The mapping from predictions to the schedule is \btext{discrete and brittle}:
+        tiny prediction changes can flip critical decisions and cause large objective jumps.
+      \end{block}
+
+    \column{0.38\textwidth}
+      \centering
+      \fbox{\parbox{0.95\textwidth}{
+        \vspace{0.2cm}
+        \centering
+        \textbf{Placeholder mini-visual}\\
+        ``two jobs swap $\Rightarrow$ big SCT jump''\\
+        \vspace{0.2cm}
+      }}
+      \vspace{0.1cm}
+      \scriptsize
+      Suggestion: generate a 2-job swap cartoon in ChatGPT UI.
+  \end{columns}
+
+  \vspace{0.1cm}
+  \scriptsize
+  \color{darkgray}
+  Representative: SPO (Elmachtoub \& Grigas), learning-to-rank, classic scheduling (Pinedo).
+\end{frame}
 
 \begin{frame}{The Predict-then-Optimize disconnect}
   \begin{columns}[T]
@@ -413,20 +481,21 @@
   \btext{Goal:} learn predictors that minimize \emph{decision regret} (schedule quality), not just MSE.
 \end{frame}
 
-\begin{frame}{White-box idea: polynomial-time rules are sets of critical decisions}
+\begin{frame}{SASS: structure-aware surrogates from critical decisions}
   \begin{itemize}
-    \item Many optimal/near-optimal dispatching rules are \btext{discrete} but \btext{structured}:
+    \item Many deterministic optima are \btext{polynomial-time rules} that are \btext{discrete} but \btext{structured}:
     \begin{itemize}
       \item SPT: pairwise comparisons \(i \prec j\)
       \item Johnson: group assignment + within-group ordering
       \item EDD/FIFO: thresholding / sorting
     \end{itemize}
-    \item Convert these critical decisions into a smooth loss:
+    \item \btext{SASS idea}: replace each critical decision by a smooth sigmoid penalty,
+    and \btext{weight} it by its local impact on the objective.
     \[
       L_{\mathrm{surr}} = \sum_{d \in \mathcal{K}} \phi_d(\theta^\star)\,
       \sigma\!\left(\frac{-m_d}{\lambda}\right)
     \]
-    where \(\phi_d\) weights the \btext{cost} of getting decision \(d\) wrong.
+    where \(\phi_d\) is the \btext{cost of getting decision \(d\) wrong}.
   \end{itemize}
 
   \vspace{0.2cm}
@@ -452,15 +521,15 @@
   \btext{Loss:} penalize misordered pairs smoothly, proportional to \(R_{i,j}\).
 \end{frame}
 
-\begin{frame}{Results: synthetic robustness (why the surrogate matters)}
+\begin{frame}{Results: synthetic evaluation (stability + scalability)}
   \begin{center}
-    \includegraphics[width=0.48\textwidth]{compare-methods-fixed-range.png}\hfill
-    \includegraphics[width=0.48\textwidth]{improvement--percentage.png}
+    \includegraphics[width=0.48\textwidth]{new_plot/linearDataset_problem1.png}\hfill
+    \includegraphics[width=0.48\textwidth]{new_plot/analysis_number_of_pairs.png}
   \end{center}
   \vspace{-0.1cm}
   \begin{itemize}
-    \item our surrogate stays stable even under heavy noise
-    \item SPO+ can diverge; MSE/ranking plateau
+    \item \btext{Stability}: SASS is more stable than SPO+ under increasing noise.
+    \item \btext{Scalability}: pairwise sampling is sufficient (e.g., \(\sim10{,}000\) pairs can already reach low SCT error).
   \end{itemize}
 \end{frame}
 
@@ -469,9 +538,10 @@
     \column{0.58\textwidth}
       \btext{Setting}:
       \begin{itemize}
-        \item outpatient exams (single resource sequencing per day)
+        \item outpatient exams (single-resource sequencing per day)
         \item durations uncertain; features from logs
-        \item objective: reduce congestion (SCT proxy)
+        \item objective: reduce congestion (SCT)
+        \item evaluation over \btext{Jan--Dec 2021} (one full year)
       \end{itemize}
       \vspace{0.2cm}
       \btext{Why it matters to BPM}:
@@ -494,12 +564,13 @@
       \begin{block}{Key findings}
         \begin{itemize}
           \item \btext{Best in 11/12 months} (lowest relative SCT error)
-          \item \btext{$\sim$34\%} error reduction vs SPO+
-          \item \btext{$\sim$10\%} improvement vs ranking baselines
+          \item \btext{Average relative SCT error}: \btext{0.316} (SASS)
+          \item Baselines (avg): 0.353 (MSE), 0.338 (LTR), 0.476 (SPO+)
+          \item Improvement: \(\sim\)10\% vs MSE, \(\sim\)34\% vs SPO+
         \end{itemize}
       \end{block}
       \vspace{0.1cm}
-      \btext{Interpretation:} learning is guided by the scheduling rule’s structure and its real cost of mistakes.
+      \btext{Interpretation:} learning is guided by the scheduling rule’s structure and the real cost of mistakes.
 
       \ifshort
         \vspace{0.15cm}
@@ -508,17 +579,18 @@
 
     \column{0.38\textwidth}
       \centering
-      % Placeholder for a clean summary graphic later:
+      % Placeholder for a clean summary graphic later (bar chart or table screenshot).
       \fbox{\parbox{0.95\textwidth}{
         \vspace{0.15cm}
         \centering
         \textbf{Placeholder}\\
-        Monthly bar chart of relative error\\
+        12-month plot (Jan--Dec 2021)\\
+        Relative SCT error by method\\
         \vspace{0.15cm}
       }}
       \vspace{0.1cm}
       \scriptsize
-      Suggestion: generate a simple 12-month bar chart in ChatGPT UI.
+      Suggestion: generate a clean 12-month bar chart (or heatmap table) in ChatGPT UI.
   \end{columns}
 \end{frame}
 

@@ -49,7 +49,7 @@
   {\par}
 
 % Title and authors (placeholders to be updated)
-\title{Surrogate-Based Smart Predict and Schedule}
+\title{SASS: Structure-Aware Surrogates for Learning to Schedule}
 
 \author{Anonymous}
 \begin{document}
@@ -58,12 +58,12 @@
 
 \begin{abstract}
 Task scheduling under uncertainty is a fundamental challenge in artificial intelligence and operations research, with applications in manufacturing, logistics, cloud computing, and healthcare.
-Smart predict-and-optimize (SPO) methods address this challenge by learning predictive models that directly minimize decision regret, but in practice they struggle with non-differentiable objectives and the discrete nature of optimal scheduling rules.
-We propose a surrogate-based framework for smart predict-and-schedule that views polynomial-time scheduling algorithms,
-such as shortest-processing-time (SPT), earliest-due-date (EDD), FIFO, and Johnson's rule,
-as collections of critical decisions, and attaches to each decision a smooth sigmoid-based penalty weighted by its contribution to the scheduling objective.
-We instantiate this framework on two classical problems: (i) single-machine scheduling with the sum of completion times (SCT) objective, where misordered job pairs are weighted by their SCT increase, and (ii) the two-machine flow shop with makespan minimization, where misclassified groups and misordered jobs are weighted by the corresponding Johnson swap costs.
-Experiments on synthetic SCT benchmarks and a real-world outpatient scheduling dataset from a cancer hospital show that our approach reduces relative scheduling error by 10--34\% compared to state-of-the-art baselines and achieves the best performance for the majority of case study months.
+Smart predict-and-optimize (SPO) aims to train predictors by minimizing downstream decision regret, but in scheduling this is challenging due to non-differentiable regret and the discrete, brittle dependence of optimal rules on predictions.
+We focus on a class of \emph{surrogate-friendly scheduling problems} where the deterministic optimum is given by a known polynomial-time rule (e.g., SPT, Johnson's rule) that can be decomposed into a finite set of critical decisions (pairwise orderings, threshold tests, or group assignments).
+We propose \emph{SASS}, a structure-aware surrogate training approach that replaces these discrete decisions with smooth sigmoid penalties and weights each penalty by the local impact of that decision on the scheduling objective.
+We instantiate SASS for (i) single-machine scheduling with the sum of completion times (SCT) objective, and (ii) the two-machine flow shop with makespan minimization via Johnson's rule.
+On synthetic benchmarks, SASS is substantially more stable than an SPO-based baseline under increasing noise and is competitive with predict-then-optimize (MSE) and learn-to-rank (LTR) baselines.
+On a real-world outpatient scheduling dataset from a cancer hospital, SASS achieves the lowest relative SCT error in 11 out of 12 months and improves average error by 10--34\% over standard baselines.
 \end{abstract}
 
 \section{Introduction}
@@ -76,47 +76,40 @@ In reality, however, these parameters are uncertain and must be inferred from hi
 This mismatch between deterministic models and stochastic environments motivates the development of data-driven decision-making methods that explicitly account for uncertainty in both prediction and optimization.
 
 Smart predict-and-optimize (SPO) methods offer one such paradigm~\cite{elmachtoub2022smart}.
-Rather than learning to predict task parameters in isolation, SPO couples prediction with downstream optimization by minimizing empirical \emph{decision regret}: the difference between the objective value of the decision induced by learned predictions and that of the optimal decision under the true parameters.
-Despite their conceptual appeal, SPO methods face two major challenges in practice.
-First, the regret objective is often non-differentiable, making gradient-based learning difficult.
-Second, even when differentiable surrogates such as SPO+ are available~(\citeauthor{elmachtoub2020decisiontrees}~\citeyear{elmachtoub2020decisiontrees}), they may be poorly aligned with the structure of specific scheduling rules and can exhibit unstable training behaviour, especially when small changes in predictions lead to large changes in the optimal schedule.
+Rather than learning task parameters in isolation, SPO trains predictors to minimize \emph{decision regret}: the gap between the objective value achieved by decisions induced from predictions and the objective value of the optimal decision under the true parameters.
+However, in scheduling, regret is typically non-differentiable and the mapping from predicted parameters to the optimal schedule can be discrete and brittle, which makes direct SPO training challenging.
+In particular, a small perturbation in predictions can flip a few critical decisions and yield a highly sub-optimal schedule. 
 
-In this paper, we develop a surrogate-based framework that addresses these challenges for a broad class of polynomial-time scheduling algorithms.
-The key idea is to exploit the structure of known optimal dispatching rules and view them as finite sets of \emph{critical decisions} (e.g., pairwise orderings or group assignments) that fully determine the resulting schedule.
-For each decision, we construct a smooth sigmoid-based penalty whose argument is a signed decision score and whose weight reflects the local impact of that decision on the scheduling objective (e.g., SCT increase or makespan increase).
-This yields a differentiable ``ReLU-over-decision'' surrogate that penalizes costly misdecisions while remaining largely neutral on confidently correct ones, providing stable gradients that focus on ambiguous or high-impact decisions.
+We take a different route that is tailored to a class of \emph{surrogate-friendly scheduling problems}:
+settings in which the deterministic optimum is given by a known polynomial-time rule and the rule itself reveals a set of \emph{critical decisions} (e.g., pairwise precedence comparisons or group assignments) that determine the final schedule.
+For this class, we propose \emph{SASS} (Structure-Aware Surrogate Scheduling): a problem-inspired surrogate loss that replaces each discrete critical decision by a smooth sigmoid penalty and weights that penalty by the decision's local impact on the scheduling objective (e.g., increase in SCT or makespan).
+At inference time, we use the learned predictor inside the original polynomial-time rule, preserving interpretability and efficiency.
 
-Our primary case study is the single-machine SCT minimization problem, where we introduce a sigmoid-based surrogate that directly approximates regret by weighting misordered task pairs by their contribution to SCT.
-We further show how the same principles extend to a two-machine flow shop with makespan minimization, where the deterministic optimal policy is given by Johnson's rule and the surrogate weights misgroupings and misorderings by the corresponding Johnson swap costs.
-Across both problems, the resulting surrogates retain the interpretability of classical algorithms while enabling flexible learning with neural networks.
+We instantiate SASS for two classical problems where the deterministic optimum is known: (i) single-machine SCT minimization (SPT rule), and (ii) two-machine flow shop makespan minimization (Johnson's rule). 
+To validate this positioning, we compare SASS against predict-then-optimize (MSE), learn-to-rank (LTR), and an SPO-based baseline (SPO+~\cite{elmachtoub2022smart}), spanning objective-unaware prediction, generic ranking surrogates, and decision-aware regret surrogates, respectively.
 
-To validate our approach, we conduct extensive experiments on synthetic and real-world datasets.
-On synthetic instances of the SCT problem, our surrogate remains stable even under extreme noise, whereas SPO+ diverges.
-On a large-scale outpatient scheduling dataset from a cancer hospital, our method achieves the lowest relative SCT error in 11 out of 12 months, outperforming mean-squared-error and ranking baselines by roughly 10\% and SPO+ by 34\%.
+
+On synthetic instances, MSE may achieve lower average error in some regimes, but SASS is markedly more stable under increasing noise and consistently outperforms the SPO-based baseline.
+On a large-scale scheduling dataset that covers one year of an outpatient cancer hospital operation, SASS achieves the lowest relative SCT error in 11 out of 12 months.
 
 Our contributions can be summarized as follows:
 \begin{enumerate}
-    \item We propose a surrogate-based framework for smart predict-and-schedule that views polynomial-time scheduling rules (e.g., SPT, EDD, FIFO, Johnson's rule) as sets of critical decisions and derives differentiable sigmoid-based losses at the decision level.
-    \item We instantiate this framework on two classical scheduling problems: (i) single-machine SCT minimization and (ii) two-machine flow shop makespan minimization, deriving problem-specific surrogates that weight each decision by its contribution to SCT or makespan.
-    \item We empirically evaluate our approach on synthetic SCT benchmarks and a real-world hospital scheduling dataset, demonstrating consistent improvements over state-of-the-art SPO, learn-to-rank, and predict-then-optimize baselines.
+    \item We introduce \emph{surrogate-friendly scheduling problems}, a class where the deterministic optimum is given by a known polynomial-time rule that decomposes into a finite set of critical decisions.
+    \item For this class, we propose \emph{SASS}, a structure-aware, objective-weighted surrogate training approach that learns decision-relevant scores and plugs them into the original rule at inference time.
+    \item We instantiate SASS on single-machine SCT minimization (SPT) and two-machine flow shop makespan minimization (Johnson), and evaluate on synthetic benchmarks and a real-world hospital scheduling dataset, demonstrating strong stability and improved performance over an SPO-based baseline in our settings.
 \end{enumerate} The remainder of the paper is organized as follows.
 Section~\ref{sec:framework} introduces our general predict-and-schedule framework.
 Sections~\ref{sec:problem1} and~\ref{sec:flowshop} instantiate this framework for single-machine SCT minimization and two-machine flow shop makespan minimization, respectively.
 Section~\ref{sec:evaluation} presents experimental results on synthetic benchmarks, followed by a real-world case study in patient scheduling in Section~\ref{sec:case_study}.
 We discuss related work in Section~\ref{sec:related_work} and conclude in Section~\ref{sec:conclusion}.
 
-\section{Surrogate-Based Predict-and-Optimize}
+\section{Surrogate-Based Predict-and-Schedule}
 \label{sec:framework}
 
-This section makes the paper's core premise explicit: many classical
-\emph{polynomial-time scheduling rules} can be expressed as collections of
-\emph{critical decisions} (comparisons, threshold tests, and group assignments)
-that fully determine the resulting schedule.
-We use this view to derive smooth, decision-level surrogate losses for
-smart predict-and-schedule.
-While the same idea can sometimes be transferred to other decision problems, we
-do not claim universal applicability beyond settings where such a decomposition
-is available.
+This section introduces SASS at a high level and clarifies what problem class it targets.
+We focus on \emph{surrogate-friendly scheduling problems}, where the deterministic optimum is given by a known polynomial-time rule $\mathcal{A}$ and the schedule can be characterized by a set of \emph{critical decisions} (e.g., comparisons, threshold tests, group assignments).
+We then describe SASS as a four-step recipe (Steps 1--4 below): identify prediction targets, identify $\mathcal{A}$ and its critical decisions, derive an objective-weighted smooth surrogate, and finally deploy by plugging the learned predictor back into $\mathcal{A}$.
+To ground the notation and motivate the design choices, we present a running example on outpatient scheduling (Section~\ref{sec:framework-running-example}).
 
 \subsection{Problem Setting}
 
@@ -131,9 +124,9 @@ is the set of feasible schedules for the environment under study.
 The resulting objective value under the true parameters is $C(\pi;\theta^\star)$,
 where $C$ may represent, for example, sum of completion times or makespan.
 
-The learning task is to learn
-$\hat{\theta} = f_\omega(x)$ (with parameters $\omega$) by minimizing
-the regret of using $\pi(\hat{\theta})$ instead of the
+The learning task is to learn a predictor $\hat{\theta}=f_\omega(x)$ (with
+parameters $\omega$) that yields good schedules under the downstream objective.
+In an SPO view, one would minimize the regret of using $\pi(\hat{\theta})$ instead of the
 optimal solution, namely
 \begin{equation}
 \label{eq:regret-general}
@@ -144,10 +137,12 @@ C(\pi(\hat{\theta});\theta^\star)
 C(\pi(\theta^\star);\theta^\star),
 \end{equation}
 which is generally non-differentiable with respect to~$\omega$.
-The four step framework presented 
-below addresses this challenge by exploiting problem structure.
+In scheduling, this difficulty is amplified because $\pi(\hat{\theta})$ is often defined by a comparison-based rule (e.g., sorting or partitioning): as $\omega$ varies smoothly, the induced schedule can jump discontinuously when predicted scores cross, making regret hard to optimize with standard gradient methods.
+SASS does not attempt to optimize~\eqref{eq:regret-general} directly.
+Instead, it constructs a differentiable surrogate by exploiting the structure of $\mathcal{A}$.
+Below, we describe the four steps of SASS.
 
-\noindent\textbf{Step 1: Identify Unknown Parameters (or Decision-Relevant Scores).}
+\noindent\textbf{Step 1: Choose prediction targets (parameters or decision-relevant scores).}
 For each job $i$, define the unknown parameter vector $\theta_i^\star$ governing
 its contribution to the optimization problem (e.g., processing times, due dates,
 or machine-dependent durations).
@@ -158,7 +153,8 @@ In some problems, it is convenient for $f_\omega$ to predict not the raw
 parameters $\theta$ directly, but a set of \emph{decision-relevant scores} that
 parameterize the critical decisions of the deterministic algorithm (Step~2).
 
-\noindent\textbf{Step 2: Identify a Deterministic Polynomial-Time Counterpart.} Many optimization problems become tractable when $\theta^\star$ is known.
+\noindent\textbf{Step 2: Specify the deterministic optimal rule and extract its critical decisions.}
+Many scheduling problems become tractable when $\theta^\star$ is known.
 Suppose that, for known parameters $\theta$, the deterministic variant admits a
 polynomial-time algorithm $\mathcal{A}$ that returns an optimal decision:
 \[
@@ -166,50 +162,39 @@ polynomial-time algorithm $\mathcal{A}$ that returns an optimal decision:
 \]
 Examples include single-machine scheduling problems where sorting rules are optimal, and
 two-machine flow shops solved by Johnson’s rule, two problems which we tackle in this paper.
-Such algorithms typically reveal a structural decomposition
-$\mathcal{A}(\theta)$ that induces partitions, rankings, or threshold decisions.
-This structure is key for constructing differentiable surrogates.
+Such algorithms typically admit a structural decomposition into a finite set of
+\emph{critical decisions} (comparisons, threshold tests, group assignments) that determine the resulting schedule.
+We denote this set by $\mathcal{K}$ and treat each $d\in\mathcal{K}$ as a labeled decision whose correct outcome is implied by $\theta^\star$.
+This explicit representation of $\mathcal{A}$ via $\mathcal{K}$ is what makes the problem \emph{surrogate-friendly} and enables the construction of a differentiable training objective in Step~3.
 
-\noindent\textbf{Step 3: Derive a Smooth Surrogate from $\mathcal{A}$.} The deterministic algorithm $\mathcal{A}$ induces a discrete mapping from
+\noindent\textbf{Step 3: Build an objective-weighted, smooth surrogate.}
+The deterministic algorithm $\mathcal{A}$ induces a discrete mapping from
 parameters~$\theta$ to decisions~$\pi$.
-To train a neural network via gradient
-descent, we replace this mapping with a differentiable surrogate loss
-$L_{\mathrm{surr}}$ that approximates the regret in
-(\ref{eq:regret-general}).
-Unlike generic SPO approaches that treat the optimization oracle as a black box (e.g., via convex relaxations), our framework explicitly models the critical decision boundaries of the polynomial-time algorithm.
-This ``white-box'' approach bridges the gap between learning-to-rank and decision-focused learning.
-The construction follows three principles:
+Given the critical decision set $\mathcal{K}$ extracted in Step~2, SASS replaces the discrete decision outcomes with a differentiable surrogate loss and weights decision errors by their objective impact.
+Compared to treating the downstream optimizer as a black box, this ``white-box'' construction yields simpler gradients and avoids relying on backpropagation through a discontinuous decision map (and repeated oracle calls) during training.
+The construction follows three ingredients:
 
-\paragraph{(a) Structural decomposition.}
-Let $\mathcal{A}$ determine a schedule through a finite set of \emph{critical
-decisions} $\mathcal{K}$, such as:
-(i) pairwise precedence comparisons (e.g., SPT/EDD/FIFO-style ordering
-decisions), (ii) threshold tests, or (iii) group assignments (e.g., Johnson's
-partition into two groups).
-Some rules in $\mathcal{K}$
-are per-job classification decisions, while others are pairwise job comparisons.
-
-\paragraph{(b) Sigmoid relaxations.}
+\paragraph{(a) Decision scores.}
 For each critical decision $d \in \mathcal{K}$, define a signed \emph{decision
-score} $s_d(\omega;x)$ produced by the predictor, such that the sign of
-$s_d$ encodes the model's preferred outcome for $d$ (e.g., ``$i$ before $j$'').
-We then replace the hard, non-differentiable decision indicator by a smooth
-sigmoid approximation.
+score} $s_d(\omega;x)$ produced by the predictor, such that the sign of $s_d$
+encodes the model's preferred outcome for $d$ (e.g., ``$i$ before $j$'').
+
+\paragraph{(b) Oriented margins and sigmoid penalties.}
+We replace the hard, non-differentiable decision indicator by a smooth sigmoid approximation.
 To ensure the surrogate penalizes the \emph{wrong} outcome (rather than
 encouraging a fixed sign), we orient each decision score using the true
 parameters.
 Specifically, define a \emph{signed correctness margin}
 $m_d(\omega;x,\theta^\star)$ such that $m_d>0$ when the model agrees with the
 ground-truth decision for $d$ (with margin) and $m_d<0$ otherwise.
-In other words, $s_d$ is the model's \emph{raw} score, while $m_d$ is the \emph{oriented correctness margin}: we set $m_d$ such that $m_d > 0$ if and only if the decision implied by $s_d$ matches the ground truth.
-For example, if $s_d$ predicts ``$i$ before $j$'' but the true order is $j$ before $i$, we set $m_d = -s_d$.
+Equivalently, $m_d$ is $s_d$ multiplied by the label induced by $\theta^\star$, so that the correct side of the decision boundary corresponds to $m_d>0$.
 We then use the smooth misclassification indicator
 \[
 \sigma\!\left( -\frac{m_d(\omega;x,\theta^\star)}{\lambda} \right),
 \]
 where $\lambda>0$ controls sharpness around the boundary, $s_d=0$.
 
-\paragraph{(c) Weighted aggregation.}
+\paragraph{(c) Objective-weighted aggregation.}
 The surrogate loss is assembled as a weighted sum over critical decisions:
 \begin{equation}
 \label{eq:general-surrogate}
@@ -228,7 +213,8 @@ decisions, while for $\lambda>0$ it remains smooth and trainable with gradient
 descent.
 Key properties of this surrogate, including differentiability and convergence to regret, are analyzed in the Technical Appendix.
 
-\noindent\textbf{Step 4: Train the Prediction Model.} The neural network $f_\omega$ is trained by minimizing the surrogate loss:
+\noindent\textbf{Step 4: Train and deploy via the original rule.}
+The neural network $f_\omega$ is trained by minimizing the surrogate loss:
 \[
 \omega^\star
 := 
@@ -243,12 +229,8 @@ the critical decisions; these are passed into the polynomial-time algorithm:
 :=
 \mathcal{A}(\hat{\theta}).
 \]
-We note that this approach can, in principle, be applied beyond scheduling to routing, assignment, and other
-combinatorial optimization problems in which the deterministic case is
-tractable and structurally interpretable.
-In this paper, we focus on scheduling and show an instantiation
-of the framework for two well-known scheduling problems
-under uncertainty.
+In this paper, we focus on scheduling and instantiate this framework for two
+settings where $\mathcal{A}$ is known and optimal.
 
 
 \subsection{Running Example: Outpatient Scheduling}
@@ -270,40 +252,38 @@ decisions through $\sigma(-m_d/\lambda)$ and uses $\phi_d(\theta^\star)$ to refl
 their downstream impact (e.g., increase in total waiting time or SCT).
 This connects directly to the hospital case study in
 Section~\ref{sec:case_study}, where our learning objective is designed to
-improve the resulting patient sequencing rather than pointwise duration
-accuracy.
+improve patient sequencing.
 
 \section{Problem 1: Single-Machine Scheduling}
 \label{sec:problem1}
-We now instantiate the four-step framework of Section~\ref{sec:framework} for the
+We now instantiate the four-step SASS recipe for the
 single-machine sum of completion times (SCT) objective, where the processing times are unknown.
 The deterministic counterpart is solved by the shortest-processing-time (SPT)
 rule; we derive a smooth, decision-level surrogate that targets the pairwise
 precedence decisions induced by SPT and weights each potential misordering by
 its SCT impact.
 
-\noindent\textbf{Step 1: Identify Unknown Parameters.}
+\noindent\textbf{Step 1.}
 In this problem, the unknown parameter for each task $i$ is its processing time
-$y_i>0$. In the notation of Section~\ref{sec:framework}, we write
+$y_i>0$. We write
 $\theta_i^\star := y_i$ and $\theta^\star := (\theta_1^\star,\dots,\theta_n^\star)$.
 We observe features $x_i\in\mathbb{R}^p$ and learn a predictor
 $\hat{\theta}_i = f_\omega(x_i)$ from a dataset
 $\mathcal{D} = \{(x_j, \theta_j^\star)\}_{j=1}^N$ (equivalently, $\hat{y}_i=\hat{\theta}_i$).
 
-\noindent\textbf{Step 2: Deterministic Polynomial-Time Counterpart.} We consider the following single-resource scheduling setting: a resource is assigned to process $n$ tasks (e.g., jobs scheduled for a given day).
-All $n$ tasks are assumed to be available at the beginning of the scheduling period, but their processing times are unknown.
-The resource is non-idling, working continuously until all tasks are completed.
-The objective is to find a task sequencing that minimizes the sum of completion times (SCT).
-When the true durations $y_1, \ldots, y_n$ are known, the optimal sequence follows the shortest processing time first (SPT) heuristic, arranging tasks in ascending order of their durations~\cite{pinedo2022scheduling}.
-Equivalently, letting $\theta=(\theta_1,\dots,\theta_n)$ denote processing
-times, the deterministic algorithm is
+\noindent\textbf{Step 2.}
+For single-machine SCT minimization with all tasks available at time $0$, the deterministic optimum under known processing times is shortest-processing-time first (SPT)~\cite{pinedo2022scheduling}:
 \(
 \pi(\theta)=\mathcal{A}_{\mathrm{SPT}}(\theta)
 \),
 where $\mathcal{A}_{\mathrm{SPT}}$ sorts tasks by increasing $\theta_i$.
+The critical decision set for SPT is the collection of pairwise precedence comparisons,
+\(
+\mathcal{K} := \{d=(i,j): i<j\},
+\)
+where each $d$ encodes whether job $i$ should precede job $j$.
 
-A straightforward approach is the predict-then-optimize paradigm~\cite{Mandi2020},
-in which $f_\omega$ is learned by minimizing empirical mean squared error (MSE):
+As a reference baseline, we consider predict-then-optimize~\cite{Mandi2020}, where $f_\omega$ is trained by minimizing empirical mean squared error (MSE):
 \begin{equation}
 \omega^\star_{\mathrm{MSE}}
 =
@@ -311,11 +291,7 @@ in which $f_\omega$ is learned by minimizing empirical mean squared error (MSE):
 \end{equation}
 The resulting model predicts durations $\hat{y}_i=f_{\omega^\star_{\mathrm{MSE}}}(x_i)$,
 and the optimization phase schedules tasks by sorting predicted durations (SPT).
-In Section~\ref{sec:framework} notation, this corresponds to computing
-$\hat{\theta}_i=f_{\omega^\star_{\mathrm{MSE}}}(x_i)$ and then
-$\hat{\pi}=\mathcal{A}_{\mathrm{SPT}}(\hat{\theta})$.
-
-However, minimizing MSE ignores the structure of the scheduling objective.
+This corresponds to computing $\hat{\theta}_i=f_{\omega^\star_{\mathrm{MSE}}}(x_i)$ and then scheduling via $\hat{\pi}=\mathcal{A}_{\mathrm{SPT}}(\hat{\theta})$. However, minimizing MSE ignores the structure of the scheduling objective.
 For SCT, the cost of a prediction error depends entirely on whether it alters the task sequence.
 Consider a sequencing where the task in position $k$ has duration $y_k$. The total SCT is $\sum_{k=1}^n (n+1-k) \, y_k$.
 Swapping two tasks at positions $i < j$ alters the objective by:
@@ -324,19 +300,14 @@ R_{i,j} &= \big[(n{+}1{-}i)\, y_j + (n{+}1{-}j)\, y_i\big] -\\
 &- \big[(n{+}1{-}i)\, y_i + (n{+}1{-}j)\, y_j\big] \nonumber \\
        &= (j - i)(y_j - y_i).
 \end{align}
-We therefore seek to minimize the \emph{decision regret}, defined as the total cost of all misordered pairs.
-
-\begin{problem}{Regret minimization in SCT} \label{prob:problem1}
-Find $f_\omega$ that minimizes:
-\begin{equation} \label{eq:smartsched}
-L_{\text{regret}} = \sum_{\substack{\theta_i^\star < \theta_j^\star}} R_{i,j} \cdot \max(0, \text{sign}(f_\omega(x_i) - f_\omega(x_j))).
-\end{equation}
-\end{problem} Directly optimizing $L_{\text{regret}}$ is challenging due to non-differentiability and the combinatorial nature of ordering tasks~\cite{elmachtoub2022smart}.
-We therefore derive a differentiable surrogate loss that targets the critical
-pairwise precedence decisions of SPT and weights each decision by its SCT
+We therefore seek to minimize the \emph{decision regret}, 
+defined as the total cost of all misordered pairs:
+$$L_{\text{regret}} = \sum_{\substack{\theta_i^\star < \theta_j^\star}} R_{i,j} \cdot \max(0, \text{sign}(f_\omega(x_i) - f_\omega(x_j))).$$ Optimizing $L_{\text{regret}}$ is challenging due to non-differentiability and the combinatorial nature of ordering tasks~\cite{elmachtoub2022smart}.
+We derive a differentiable surrogate loss that targets the
+pairwise precedence decisions of SPT and weights the decisions by their SCT
 impact.
 
-\noindent\textbf{Step 3: Derive a Smooth Surrogate from SPT.}  The critical decisions for SPT are pairwise precedence comparisons.
+\noindent\textbf{Step 3.}
 For a pair $(i,j)$, define the decision score
 \(
 s_{i,j}(\omega;x)= \hat{\theta}_i-\hat{\theta}_j = f_\omega(x_i)-f_\omega(x_j)
@@ -345,35 +316,24 @@ whose sign encodes the model's preference.
 When $\theta_i^\star<\theta_j^\star$ (i.e., $y_i<y_j$), the correct order is
 $i$ before $j$, and a misordering occurs
 when $s_{i,j}(\omega;x)>0$.
-In the framework notation, take $\mathcal{K}=\{d=(i,j): i<j\}$, $s_d=s_{i,j}$,
-and orient by the ground truth:
+In the framework notation, take $s_d=s_{i,j}$ for $d=(i,j)\in\mathcal{K}$ and orient by the ground truth:
 \(
 m_d(\omega;x,\theta^\star)=-s_{i,j}(\omega;x)
 \)
 for $\theta_i^\star<\theta_j^\star$, so $m_d>0$ iff the order is correct.
-With $\phi_d(\theta^\star)=R_{i,j}$, Eq.~\eqref{eq:general-surrogate} gives the term
-$R_{i,j}\sigma(s_{i,j}/\lambda)$.
+With weight $\phi_d(\theta^\star)=R_{i,j}$, the corresponding surrogate term is $R_{i,j}\sigma(s_{i,j}/\lambda)$.
 The empirical sigmoid loss is thus defined as:
 \begin{equation}
 L_{\text{sigmoid}}
 \;=\;
 \sum_{\substack{\theta_i^\star < \theta_j^\star}}
   R_{i,j}\,
-  \sigma\!\Bigl( \tfrac{f_\omega(x_i) - f_\omega(x_j)}{\lambda} \Bigr),
-\end{equation} A larger \(\lambda\) smooths transitions, while a smaller \(\lambda\) sharpens sensitivity to misorderings.
+  \sigma\!\Bigl( \tfrac{f_\omega(x_i) - f_\omega(x_j)}{\lambda} \Bigr).
+\end{equation}
+A larger \(\lambda\) smooths the decision boundary, while a smaller \(\lambda\) sharpens sensitivity to misorderings.
+We train by minimizing $L_{\text{sigmoid}}$, i.e., $\omega^\star = \arg\min_{\omega} L_{\text{sigmoid}}(\omega)$. Correctly ordered pairs contribute near $0$, while misordered pairs are penalized proportionally to their SCT impact $R_{i,j}$.
 
-By minimizing the empirical sigmoid loss, the learned model \(f_\omega\) is encouraged to satisfy \(f_\omega(x_j) > f_\omega(x_i)\) whenever \(\theta_j^\star > \theta_i^\star\).
-Formally:
-\[
-\omega^\star
-\;=\;
-\arg\min_{\omega}
-  L_{\text{sigmoid}}(\omega),
-\]
-Thus, training adjusts \(f_\omega\) to minimize the number and severity of misordered pairs, aligning predictions with true task durations.
-When \(f_\omega\) preserves correct orderings, the sigmoid term remains near zero, driving \(L_{\text{sigmoid}}\) downward.
-
-\noindent\textbf{Step 4: Train and Infer with SPT.} At inference time, given a new instance with features $\{x_i\}_{i=1}^n$, we
+\noindent\textbf{Step 4.} At inference time, given a new instance with features $\{x_i\}_{i=1}^n$, we
 compute $\hat{\theta}_i=f_{\omega^\star}(x_i)$ and return
 $\hat{\pi}=\mathcal{A}_{\mathrm{SPT}}(\hat{\theta})$, i.e., the SPT schedule
 obtained by sorting tasks by $\hat{\theta}_i$ in ascending order.
@@ -381,7 +341,7 @@ obtained by sorting tasks by $\hat{\theta}_i$ in ascending order.
 \section{Problem 2: Flow Shop Scheduling}
 \label{sec:flowshop}
 
-The surrogate framework developed in Section~\ref{sec:framework} naturally extends
+The SASS recipe naturally extends
 to other scheduling problems whose optimal deterministic policies admit rule-based
 structural characterizations.
 In this section, we demonstrate this by considering
@@ -392,17 +352,15 @@ We show how to construct a smooth surrogate loss that mimics the structure of
 the optimal rule while remaining differentiable and suitable for gradient-based
 learning.
 
-\noindent\textbf{Step 1: Identify Unknown Parameters.}
+\noindent\textbf{Step 1.}
 In the $F2\|C_{\max}$ setting, the unknown parameters for each job $i$ are its
-two processing times on machines $1$ and $2$. In the notation of
-Section~\ref{sec:framework}, let
+two processing times on machines $1$ and $2$, and let
 $\theta_i^\star := (p_{i1},p_{i2})$ and
 $\theta^\star := (\theta_1^\star,\dots,\theta_n^\star)$.
 
-\noindent\textbf{Step 2: Deterministic Polynomial-Time Counterpart.} In the $F2\|C_{\max}$ setting, each job $i$ has two true processing times 
-$(p_{i1}, p_{i2})$, one for each machine.
-Johnson’s rule partitions all jobs into
-two sets:
+\noindent\textbf{Step 2.}
+In the $F2\|C_{\max}$ setting, each job $i$ has two true processing times $(p_{i1}, p_{i2})$.
+Johnson’s rule partitions all jobs into two sets
 \[
 G_1 = \{ i : p_{i1} < p_{i2} \}, 
 \qquad
@@ -410,17 +368,20 @@ G_2 = \{ i : p_{i1} \ge p_{i2} \},
 \]
 orders $G_1$ in ascending $p_{i1}$, orders $G_2$ in descending $p_{i2}$, and 
 concatenates the two sequences.
-Consequently, the optimal sequence is determined
-by (i) the correct group assignment of each job and (ii) the correct ordering 
-within each group.
+Consequently, the optimal sequence is determined by (i) the group assignment of each job and (ii) the within-group ordering.
 Equivalently, for known processing times $\theta$, the deterministic optimum is
 \(
 \pi(\theta)=\mathcal{A}_{\mathrm{J}}(\theta)
 \),
 where $\mathcal{A}_{\mathrm{J}}$ is Johnson's rule.
 
-When processing times are unknown and must be predicted from features $x_i$, we
-follow the Section~\ref{sec:framework} view and predict \emph{decision-relevant
+We make the critical decision set explicit:
+\(
+\mathcal{K}=\mathcal{K}_{\mathrm{group}}\cup\mathcal{K}_{\mathrm{order}},
+\)
+where $\mathcal{K}_{\mathrm{group}}=\{d=i: i\in[n]\}$ represents group membership decisions and $\mathcal{K}_{\mathrm{order}}=\{d=(i,j): i<j,\ i,j \in G_1 \text{ or } i,j \in G_2\}$ encodes within-group precedence comparisons.
+
+When processing times are unknown and must be predicted from features $x_i$, we predict \emph{decision-relevant
 scores} that parameterize the critical decisions of $\mathcal{A}_{\mathrm{J}}$.
 Concretely, each job $i$ is mapped to two scalar scores
 \[
@@ -435,21 +396,18 @@ The predicted sequence then follows the structure of Johnson’s rule:
     \item Assign each job to $\hat{G}_1$ if $\hat{d}_i < 0$ and to $\hat{G}_2$ otherwise.
     \item Sort $\hat{G}_1$ by increasing $\hat{s}_i$.
     \item Sort $\hat{G}_2$ by decreasing $\hat{s}_i$.
-\end{enumerate}
-
-This parameterization separates the discrete grouping decision from the within-group ranking
+\end{enumerate} This parameterization separates the discrete grouping decision from the within-group ranking
 decision, reflecting the decomposition inherent in Johnson’s optimal policy.
 At inference time, we apply the same deterministic structure,
 $\hat{\pi}=\mathcal{A}_{\mathrm{J}}(\hat{\theta})$, using $\hat{\theta}_i=(\hat{d}_i,\hat{s}_i)$.
 
-\noindent\textbf{Step 3: Derive a Smooth Surrogate from Johnson's Rule.} To train the model, we define a smooth surrogate loss consisting of two components:
+\noindent\textbf{Step 3.} To train the model, we define a smooth surrogate loss consisting of two components:
 (1) a penalty for incorrect \emph{group assignment}, and
 (2) a penalty for incorrect \emph{within-group ordering}.
 Both components rely on sigmoidal approximations of indicator functions, as in
-Section~\ref{sec:framework}. 
+our general construction. 
 
-Let $\mathcal{K}=\mathcal{K}_{\mathrm{group}}\cup\mathcal{K}_{\mathrm{order}}$
-with group decisions $d=i$ and ordering decisions $d=(i,j)$.
+We use the critical decision set $\mathcal{K}=\mathcal{K}_{\mathrm{group}}\cup\mathcal{K}_{\mathrm{order}}$ defined in Step~2, with group decisions $d=i$ and ordering decisions $d=(i,j)$.
 For $d=i$, set $s_d=\hat{d}_i$, $m_d=\hat{d}_i d_i$ with $d_i=p_{i1}-p_{i2}$, and
 $\phi_d=|d_i|$.
 For $d=(i,j)$, set $\phi_d=\Delta_{i,j}$ and use sortable scores:
@@ -545,7 +503,7 @@ and within-group ordering, so that $L_{\mathrm{Johnson}}$ converges to a
 piecewise-constant approximation of the true makespan regret induced by
 Johnson's rule.
 
-\noindent\textbf{Step 4: Train and Infer with Johnson's Rule.}
+\noindent\textbf{Step 4.}
 We train $f_\omega$ by minimizing the surrogate $L_{\mathrm{Johnson}}$.
 At inference time, given a new instance with features $\{x_i\}_{i=1}^n$, we
 compute $(\hat{d}_i,\hat{s}_i)=f_{\omega^\star}(x_i)$ and construct the schedule
@@ -563,7 +521,7 @@ Finally, we present the main experimental results and discuss the applicability 
 
 \subsection{Experimental Setup}
 
-Experiments were conducted on synthetically generated datasets to evaluate the performance of the sigmoid-based surrogate loss under a range of scheduling scenarios.
+Experiments were conducted on synthetically generated datasets to evaluate the performance of the proposed SASS surrogate loss under a range of scheduling scenarios.
 The experiments systematically varied data generation models, noise levels, uncertainty level on task duration, and benchmark comparisons.
 
 \paragraph{Datasets.}
@@ -583,91 +541,129 @@ In the absence of established benchmarks, these two datasets support systematic 
         This specific structure introduces smooth nonlinearities, feature interactions, and periodic components.
     \end{itemize}
 
-    \item \textbf{Problem 2 (Flow Shop) Generation.} We generate durations for two machines, $m_1$ and $m_2$:
-    \begin{itemize}
-        \item \emph{Linear model:} Generated similarly to Problem 1.
-        \item \emph{Nonlinear model:} To ensure a balanced probability of assigning jobs to groups $G_1$ and $G_2$ (see Section~\ref{sec:flowshop}), we use the function $g(\mathbf{x})$ defined above:
+    \item \textbf{Problem 2 (Flow Shop) Generation.} 
+    We generate durations for two machines, $m_1$ and $m_2$, by incorporating the functions defined for Problem~1 and adding other elements to ensure a balanced probability of assigning jobs to groups $G_1$ and $G_2$ (see Section~\ref{sec:flowshop}). 
+    For the \emph{linear model}, we randomly add a $\delta$ sampled from a normal distribution in $[0,1]$ to one machine and subtract it from the other. 
+    For the \emph{nonlinear model}, we modify the outputs of the function $g(\mathbf{x})$ by adding or subtracting small linear combinations of the input features to each machine:
         \[
         \begin{aligned}
         m_1(\mathbf{x}) &= g(\mathbf{x}) + 0.3\, x_1 - 0.2\, x_3, \\
         m_2(\mathbf{x}) &= g(\mathbf{x}) - 0.25\, x_2 + 0.4\, x_4 .
         \end{aligned}
         \]
-    \end{itemize}
 \end{itemize} The functions were chosen to ensure that the learning task remains nontrivial, requiring the model to capture both local and global feature dependencies, while still being interpretable and reproducible.
-
-To ensure strictly positive durations, constants of $100$ and $500$ were added to the final task durations for the Problem~1 and Problem~2 datasets, respectively. Finally, gaussian noise with standard deviation $\eta$ was added to simulate uncertainty.
+An offset is added to the final task durations to guarantee that all values remain strictly positive. Finally, gaussian noise with standard deviation $\eta$ was added to simulate uncertainty.
 
 \paragraph{Benchmark methods.}
 
-We compared our method with two predict-and-optimize approaches, \emph{SPO+} and the $MSE$, as well as with a learn-to-rank (LTR) surrogate loss.
-\emph{SPO+} is a convex surrogate loss designed for predict-and-optimize tasks \cite{elmachtoub2022smart}, which focuses predictions on minimizing decision regret.
-In contrast, the \emph{logistic rank loss} is an LTR surrogate that penalizes incorrect pairwise orderings based on their difference, without relying on the specifics of the scheduling problem.
-Specifically, for each job pair $(i,j)$ we define the surrogate loss as $\sigma(\Delta_{ij})$ based on Problem~1 and 2.
+For both Problem configurations, we compare our method with a \emph{predict-and-optimize} solution via MSE and other two \emph{Smart Predict, then Optimize} baselines.
+\emph{SPO+}~\cite{elmachtoub2022smart} is a convex and differentiable implementation of SPO that enables gradient-based learning by minimizing decision regret.
+In contrast, the \emph{logistic rank loss} is an LTR surrogate that penalizes incorrect pairwise orderings based on their differences, without relying on the specifics of the scheduling problem.
+%\footnote{For each job pair $(i,j)$ where $i$ precedes $j$, we define the surrogate loss as $\sigma(\Delta_{ij})$, where $\Delta_{ij} = f_\omega(x_i) - f_\omega(x_j)$; this applies to both Problem~1 and Problem~2.} to put in appendix
 
 \paragraph{Experimental Procedure.}
-To enable scalability across scheduling problems of arbitrary size, we train a predictive model that is independent of the number of jobs in the input schedule. This is achieved by formulating the learning objective in a pairwise manner, which allows the model to be trained on comparisons between jobs and naturally generalizes to schedules of any length. Exhaustively comparing all possible pairwise job combinations in the training set is computationally infeasible; therefore, we adopt an approximation strategy based on sampling a subset of job pairs. Despite this approximation, Figure~\ref{fig:pairwise_number} shows a subset of pairwise comparisons is sufficient to learn meaningful relative orderings and achieve strong performance, as demonstrated in Figure
-
+\label{sec:experimental_procedure}
+To enable scalability across scheduling problems of arbitrary size, we train a predictive model that is independent of the number of jobs in the input. This is achieved by formulating the learning objective in a pairwise manner, which allows the model to be trained on comparisons between two jobs and then generalizes to schedules of any length. Exhaustively comparing all possible pairwise job combinations in the training set is computationally infeasible; therefore, we adopt an approximation strategy based on sampling a subset of job pairs. Despite this approximation, Figure~\ref{fig:pairwise_number} shows that a subset of job pairs can already achieve a low SCT error compared to the optimal solution, without training on all possible pairwise comparisons. In fact, using $10000$ pairwise comparisons is already enough to reach a 3.2\% error relative to the optimal total SCT.
     
     
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.45\textwidth]{new_plot/analysis_number_of_pairs.png}
-\caption{Impact of the number of sampled pairs on performance.}
+\includegraphics[width=0.45\textwidth]{new_plot/analysis_number_of_pairs_2.png}
+\caption{Impact of the number of sampled pairs on performance on \emph{Nonlinear} dataset.}
 \label{fig:pairwise_number}
 \end{figure}
 
 
-The experiments were implemented in Python. Specifically, each baseline was trained using the same two-hidden-layer neural network architecture with the PyTorch library and the same number of iterations. Datasets were generated according to the described models, with varying noise levels $\eta$, to evaluate the models’ robustness to prediction uncertainty. Each dataset was normalized and split into 70\% training, 10\% validation, and 20\% test subsets. 
+For MSE, LTR and our method we use the same two-hidden-layer neural network architecture, number of iterations and, finally, number of pair comparisons, to properly evaluate which of them converges first to a low error. For SPO+, we use a dedicated hyperparameter optimization procedure (e.g., batch size) and a larger number of iterations where needed. Code will be available upon acceptance.
+Each dataset is normalized and split into 70\% training, 10\% validation, and 20\% test subsets, with training performed using the Adam optimizer and early stopping.
 
 
 \paragraph{Evaluation metric.}
-Models were evaluated on the test set by comparing the SCT and Makespan achieved by predicted job orderings against those of the true optimal order, with results averaged over ten runs.
-The optimal schedule is represented by SPT and Johnson schedule under true processing times for Problem~1 and ~2, respectively.
+Models are evaluated on the full test set by comparing the SCT and Makespan of jobs ordering defined from the predicted durations of each activity within a job, against the optimal solution computed using the true durations. The optimal schedule corresponds to the SPT rule for Problem~1 and the Johnson schedule for Problem~2.
 
 
 \subsection{Results}
 
-Table presents a comparison of SPO+, Rank Loss, MSE and the proposed sigmoid surrogate on linear and nonlinear datasets under different level of noise $\eta$. Regarding the linear datasets, the sigmoid surrogate demonstrates robustness across noise levels, consistently achieving lower SCT compared to all the baselines.
+Starting from Problem~1, SASS outperforms the baselines across all noise levels $\eta$ on \emph{linear} datasets, as shown in Table~\ref{tab:linear_dataset_results}.
+Figure~\ref{fig:nonLinear_dataset_1_machine_problem} shows the results on \emph{nonlinear} datasets, where SASS remains competitive with the other baselines, which tend to be more stable and exhibit lower standard deviation across runs. MSE achieves better performance at noise levels $0$ and $6$ (Figure~\ref{fig:nonLinear_dataset_1_machine_problem}), especially at noise $0$, which represents a more typical prediction scenario, but shows high variability over multiple runs. The closest competitor for Problem~1 is LTR, since the optimal solution corresponds to an exact ranking of the jobs by duration.
+
+SPO+, on the other hand, struggles in both the presence and absence of noise across all dataset types, as reported in Figure~\ref{fig:nonLinear_dataset_1_machine_problem}. The weak performance of SPO+ in Problem~1 stems from the definition of the problem itself. SPO+ works best when the optimization objective changes smoothly with respect to the predicted order. In contrast, for the SCT problem, even a small error in the predicted ordering can lead to large deviations in the objective, which makes SPO+ less effective.
+
+Finally, Table~\ref{tab:times_training} reports the training times over Problem~1 for different nonlinear dataset sizes with noise level $5$. As observed, the fastest method is MSE, but it grows roughly with the dataset size since it compares all elements. In contrast, LTR and SASS (ours) scale more smoothly thanks to pairwise approximation (Section~\ref{sec:experimental_procedure}).
+Regarding SPO+, we observe that its training time is independent of the dataset size but depends on the specific problem instance and its gradient. Additionally, SPO+ requires hyperparameter optimization, taking roughly 40 minutes per dataset and noise level, to achieve comparable performance, and it often needs $5000$ iterations instead of the $1000$ used by the other methods.
+
+Concern Problem~2 in \emph{linear} datasets, Table~\ref{tab:linear_dataset_results} does not highlight a clear winner. Howev
+
+
+outperforms the other method in precense of a relevant noise level on \emph{linear} datasets as shown in Table~\ref{tab:linear_dataset_results}. 
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.5\textwidth]{new_plot/nonLinear_problem1.png}
+\caption{Comparison of MSE, SPO+, LTR, and SASS (ours) on \emph{Nonlinear} datasets of size $10000$ on Problem~1. SCT error (logarithmic scale) relative to the optimal schedule is shown.}
+\label{fig:nonLinear_dataset_1_machine_problem}
+\end{figure}
+
+
+\begin{table}[t]
+\centering
+\resizebox{0.45\textwidth}{!}{
+\begin{tabular}{c c c c c c c c}
+\toprule
+ & \textbf{Method} & \multicolumn{6}{c}{\textbf{Noise Level}} \\
+ &  & 0 & 2 & 4 & 6 & 8 & 10 \\
+\midrule
+\multirow{4}{*}{\rotatebox{90}{\textbf{Problem 1}}} 
+& MSE Loss     & 0.576 & 0.363 & 0.359 & 0.701 & 0.706 & 1.132 \\
+& LTR          & 0.225 & 0.284 & 0.356 & 0.494 & 0.647 & 0.976 \\
+& SASS  & \textbf{0.209} & \textbf{0.222} & \textbf{0.270} & \textbf{0.402} & \textbf{0.622} & \textbf{0.954} \\
+& SPO+         & 2.262 & 2.445 & 6.125 & 6.450 & 8.589 & 6.178 \\
+\midrule
+\multirow{4}{*}{\rotatebox{90}{\textbf{Problem 2}}} 
+& MSE & \textbf{0.006} & 0.069 & 0.158 & 0.229 & 0.270 & 0.277 \\
+& LTR & 0.009 & 0.045 & \textbf{0.116} & 0.178 & 0.255 & 0.225 \\
+& SASS  & 0.007 & \textbf{0.042} & 0.132 & 0.128 & \textbf{0.133} & \textbf{0.158} \\
+& SPO+  & 0.012    &       &   0.163    &   \textbf{0.106} &       &       \\
+\bottomrule
+\end{tabular}}
+\caption{SCT and Makespan \% error respect to optimal schedule, across different noise level $\eta$ over linear dataset with size $10000$ for Problem~1 and Problem~2.}
+\label{tab:linear_dataset_results}
+\end{table}
+
+
+
+\begin{table}[t]
+\centering
+\resizebox{0.85\columnwidth}{!}{
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Method} & \multicolumn{4}{c}{\textbf{Dataset Size}} \\
+                 & 5000 & 10000 & 50000 & 100000 \\
+\midrule
+MSE         & 2.79s & 2.71s & 9.68s & 21.62s \\
+LTR   & 25.12s & 30.81s & 35.79s & 45.05s \\
+SASS (ours) & 28.64s & 33.26s & 41.57s & 52.59s \\
+SPO+        & 26.15s & 59.82s & 23.746s & 24.246s \\
+\bottomrule
+\end{tabular}}
+\caption{Training times across different \emph{nonlinear} dataset sizes with noise $10$, computed over $10$ runs.}
+\label{tab:times_training}
+\end{table}
 
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.5\textwidth]{new_plot/linearDataset_problem1.png}
-\caption{Comparison of SPO+, Rank Loss, and the proposed surrogate method on linear datasets. SCT error (logarithmic scale) relative to the optimal schedule is shown.}
-\label{fig:linear_dataset_1_machine_problem}
+\includegraphics[width=0.5\textwidth]{new_plot/nonLinearProblem2.png}
+\caption{Comparison of MSE, SPO+, LTR, and SASS (ours) on \emph{Nonlinear} datasets of size $10000$ on Problem~2. Makespan error (logarithmic scale) relative to the optimal schedule is shown.}
+\label{fig:nonLinear_dataset_1_machine_problem}
 \end{figure}
-
-
-
-\begin{table*}[t]
-\centering
-\begin{tabular}{@{}>{\cellcolor{lightgray}}l@{\hskip 0.2in}lccccccc@{}} % extra column for vertical label
-\toprule
-\cellcolor{white} & Method & \multicolumn{6}{c}{Noise Level $\eta$} \\
- \cellcolor{white} &        & 0 & 2 & 4 & 6 & 8 & 10 \\
-\midrule
- & MSE        & \textbf{0.001}$\pm$0.0007 & 0.015$\pm$0.017 & 0.010$\pm$0.008 & \textbf{0.010}$\pm$ & \textbf{0.016}$\pm$ & 0.022$\pm$\\
- & Rank Loss  & 0.061$\pm$0.025 & 0.067$\pm$0.015 & 0.057$\pm$0.015 & 0.058$\pm$ & 0.072$\pm$ & 0.105$\pm$  \\
- & Regret Loss & 0.004$\pm$0.003 & \textbf{0.011}$\pm$0.006 & \textbf{0.008}$\pm$0.005 & 0.015$\pm$ & 0.019$\pm$ & \textbf{0.013}$\pm$ \\
- \multirow{-4}{*}{\rotatebox[origin=c]{90}{\textbf{Linear}}}  & SPO+  & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ \\
-\midrule
-& MSE     & 0.017$\pm$ & 0.045$\pm$ & 0.074$\pm$ & \textbf{0.143}$\pm$ & 0.201$\pm$ & 0.197$\pm$ \\
-& Rank Loss  & 0.037$\pm$ & \textbf{0.039}$\pm$ & 0.079$\pm$ & 0.098$\pm$ & 0.146$\pm$ & $\pm$ \\
-& Regret Loss & \textbf{0.005}$\pm$ & \textbf{0.039}$\pm$ & \textbf{0.064}$\pm$ & \textbf{0.143}$\pm$ & \textbf{0.132}$\pm$ & $\pm$ \\
-\multirow{-4}{*}{\rotatebox[origin=c]{90}{\textbf{NonLinear}}} & SPO+ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ \\
-\bottomrule
-\end{tabular}
-\caption{SCT errors across linear and nonlinear datasets of size $10000$ with different noise level on Problem~2.}
-\label{tab:linear_nonlinear_SCT_flowshop}
-\end{table*}
 
 
 
 \section{Case Study: Patient Scheduling}
 \label{sec:case_study}
 
-We evaluate the proposed sigmoid-based surrogate loss on a real-world dataset
+We evaluate the proposed SASS surrogate loss on a real-world dataset
 from \textit{DayHospital}, a U.S.\ cancer clinic. We describe the setting,
 experimental protocol, and results.
 
@@ -681,19 +677,19 @@ diagnosis, appointment type, and a linkage indicator for subsequent infusions.
 To simulate deployment, we use a rolling-horizon split, training on the first three weeks of each month and evaluating on the fourth.
 
 
-We compare our sigmoid-based surrogate against three baselines: (i) \emph{Rank Loss} (pairwise negative log-likelihood), (ii) \emph{Mean Squared Error (MSE)} (predict-then-optimize), and (iii) \emph{SPO+} (a convex decision-aware surrogate).
+We compare SASS against three baselines: (i) \emph{LTR} (pairwise negative log-likelihood), (ii) \emph{Mean Squared Error (MSE)} (predict-then-optimize), and (iii) \emph{SPO+} (a convex decision-aware surrogate).
 All models are two-layer feedforward neural networks trained with Adam.
 Performance is measured by the \emph{relative SCT error}, defined as the normalized difference between the SCT of the predicted schedule and the optimal SCT under true durations.
 
 \subsection{Results}
 
 Table~\ref{tab:monthly-sct} reports the relative SCT error across the full year (January--December 2021).
-Our sigmoid-based method achieves the lowest error in 11 out of 12 months, with an average error of \textbf{0.316}, compared to 0.353 for MSE, 0.338 for LTR, and 0.476 for SPO+.
+SASS achieves the lowest error in 11 out of 12 months, with an average error of \textbf{0.316}, compared to 0.353 for MSE, 0.338 for LTR, and 0.476 for SPO+.
 
 \begin{table}[t]
 \centering
 \caption{Final relative SCT errors across months of 2021 for each method.
-Average values: SPO+= 0.476, LTR= 0.338, MSE= 0.353, and Regret Loss= \textbf{0.316}.}
+Average values: SPO+= 0.476, LTR= 0.338, MSE= 0.353, and SASS (ours)= \textbf{0.316}.}
 \label{tab:monthly-sct}
 \begin{tabular}{lcccccc}
 \toprule
@@ -702,14 +698,14 @@ Method & Jan & Feb & Mar & Apr & May & Jun \\
 SPO+        & 0.48 & 0.56 & 0.53 & 0.53 & 0.52 & 0.42 \\
 LTR         & 0.33 & 0.36 & 0.33 & 0.35 & 0.33 & 0.33 \\
 MSE         & 0.35 & 0.38 & 0.36 & 0.35 & 0.34 & 0.34 \\
-Regret Loss & \textbf{0.31} & \textbf{0.34} & \textbf{0.33} & \textbf{0.33} & \textbf{0.30} & \textbf{0.31} \\
+SASS (ours) & \textbf{0.31} & \textbf{0.34} & \textbf{0.33} & \textbf{0.33} & \textbf{0.30} & \textbf{0.31} \\
 \midrule
 Method & Jul & Aug & Sep & Oct & Nov & Dec \\
 \midrule
 SPO+        & 0.48 & 0.38 & 0.40 & 0.49 & 0.42 & 0.50 \\
 LTR         & 0.33 & \textbf{0.28} & 0.34 & 0.32 & 0.37 & 0.38 \\
 MSE         & 0.33 & 0.31 & 0.34 & 0.36 & 0.37 & 0.41 \\
-Regret Loss & \textbf{0.30} & 0.29 & \textbf{0.31} & \textbf{0.29} & \textbf{0.33} & \textbf{0.35} \\
+SASS (ours) & \textbf{0.30} & 0.29 & \textbf{0.31} & \textbf{0.29} & \textbf{0.33} & \textbf{0.35} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -720,7 +716,7 @@ Figure~\ref{fig:real-data-jan} shows the training trajectory for a representativ
     \centering
     \includegraphics[width=0.5\textwidth]{LossComparison_Jan.png}
     \caption{Relative SCT error during training on the real-world Exam scheduling dataset for January 2021.
-    The sigmoid-based regret loss consistently achieves lower SCT error compared to Rank Loss, MSE Loss, and SPO+.}
+    The SASS surrogate loss consistently achieves lower SCT error compared to LTR, MSE Loss, and SPO+.}
     \label{fig:real-data-jan}
 \end{figure}
 
@@ -734,8 +730,10 @@ Our work lies within three literature strands: smart predict-and-optimize, domai
 \noindent\textbf{Smart predict-and-optimize.}
 Standard predict-then-optimize approaches (e.g.,~\cite{shahabikargar2014predicting}) typically minimize prediction error (MSE), ignoring downstream decision impact.
 The SPO framework~\cite{elmachtoub2022smart} addresses this by minimizing decision regret directly, but its non-convexity necessitates surrogates like SPO+.
-While extensions exist---SPO Trees~\cite{elmachtoub2020decisiontrees} for interpretability, relaxation-based methods for knapsack~\cite{Mandi2020}, or RL-based constrained optimization~\cite{Silvestri2024}---they often assume deterministic parameters or struggle with nonlinear scheduling dynamics.
-In contrast, our framework directly exploits the critical-decision structure of polynomial-time rules, enabling stable, differentiable learning for complex scheduling objectives.
+While extensions exist such as SPO Trees for interpretability~\cite{elmachtoub2020decisiontrees}, relaxation-based methods for knapsack~\cite{Mandi2020}, or RL-based constrained optimization~\cite{Silvestri2024}, these
+methods often assume deterministic parameters or struggle with nonlinear scheduling dynamics.
+In scheduling, a further practical challenge is that the decision map induced by comparison-based rules is discontinuous: small changes in predicted parameters can flip precedence or group-assignment decisions and yield a different schedule, which makes direct regret minimization difficult to optimize with standard gradients.
+Accordingly, we benchmark against SPO+ as the standard decision-aware surrogate from the SPO line of work, and we focus on structure-aware surrogates that provide stable, objective-weighted training signals while preserving fast deployment via the known polynomial-time rule.
 
 \noindent\textbf{Semi- and domain-specific SPO.}
 Semi-SPO~\cite{Yang2023Semi,Yan2020Semi} and domain-specific methods for transport~\cite{tian2023}, manufacturing~\cite{Wang2024Refinery}, and energy~\cite{Alrasheedi2024Microgrid} employ specialized losses to improve performance.
@@ -745,7 +743,7 @@ By contrast, our surrogate is provably consistent: it converges exactly to the t
 \noindent\textbf{Learn to Rank.}
 Learn-to-rank (LTR) methods like RankNet~\cite{burges2005learning}, ListWise~\cite{cao2007learning}, and BPR~\cite{rendle2009bpr} also utilize sigmoid-based penalties.
 However, standard LTR losses optimize generic ranking metrics (e.g., AUC, NDCG) rather than the actual scheduling objective.
-Our approach adapts the LTR mechanism but weights each decision by its precise contribution to the objective (SCT or makespan), ensuring the model minimizes the relevant operational cost.
+Our approach adapts the LTR mechanism, but weights each decision by its precise contribution to the objective (SCT or makespan), ensuring the model minimizes the relevant operational cost.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -757,10 +755,9 @@ Future work will extend this decision-aware paradigm to complex multi-stage sche
 
 \bibliographystyle{named}
 \bibliography{mybibfile}
-
-\newpage
+\clearpage
 \appendix
-
+\newpage
 \section{Technical Appendix}
 \label{sec:appendix}
 
@@ -829,23 +826,26 @@ In Problem 2, it approximates the makespan regret via the aggregated Johnson swa
 
 \section{Additional results}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.5\textwidth]{new_plot/linearDataset_problem1.png}
+\caption{Comparison of SPO+, LTR, and SASS (ours) on \emph{linear} datasets of size $10000$. SCT error (logarithmic scale) relative to the optimal schedule is shown.}
+\label{fig:nonLinear_dataset_1_machine_problem}
+\end{figure}
+
 \begin{table}[t]
 \centering
-\resizebox{0.95\columnwidth}{!}{
-\begin{tabular}{lcccccccc}
+\caption{Hyperparameter tuning for the SPO+ method.}
+\label{tab:spo_hyperparams}
+\begin{tabular}{ll}
 \toprule
-\multirow{3}{*}{Method} & \multicolumn{8}{c}{Dataset Size} \\
-                         & \multicolumn{2}{c}{5000} & \multicolumn{2}{c}{10000} & \multicolumn{2}{c}{50000} & \multicolumn{2}{c}{100000} \\
-                         & SCT & Time & SCT & Time & SCT & Time & SCT & Time \\
+Parameter & Range / Value \\
 \midrule
-MSE         & 3.027 & 2.794s & 2.798 & 2.719s & 2.767 & 9.685s & 3.037 & 21.624s \\
-Rank Loss   & 2.789 & 25.121s & 2.924 & 30.814s & 2.873 & 35.796s & 2.974 & 45.054s \\
-Regret Loss & \textbf{2.605} & 28.646s & \textbf{2.793} & 33.265s & 2.879 & 41.57s & \textbf{2.920} & 52.593s \\
-SPO+   &  &  &  & &  & &  & & & \\
+Learning rate & $10^{-5}$ -- $5 \times 10^{-2}$ (log scale) \\
+Batch size & \{5, 10, 20, 30, 50\} \\
+Patience & 200 -- 4000 \\
 \bottomrule
-\end{tabular}}
-\caption{SCT errors and training times across different dataset sizes.}
-\label{tab:linear}
+\end{tabular}
 \end{table}
 
 
