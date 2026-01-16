@@ -17,7 +17,7 @@
 
 % ---- Talk-length toggle ----
 \newif\iflong
-\longfalse      % TU/e (30 min)
+\\longtrue      % TUM (60 min)
 % \longtrue     % TUM (60 min)
 
 % ---- Theme ----
@@ -88,21 +88,6 @@
       Eindhoven University of Technology
     \fi
   \end{center}
-\end{frame}
-
-% NEW: Opening hook (optional fix #3)
-% CORE
-\begin{frame}{The puzzle: why can ``reasonable'' scheduling be hours worse than necessary?}
-  \begin{block}{Observation (DayHospital, busy days)}
-    Under realistic constraints (uncertainty + calendars), better schedules can finish \btext{up to \(\sim\)4 hours earlier} on busy days.
-    Yet many deployed policies still look like ``best practice'' local dispatching.
-  \end{block}
-  \vspace{0.25cm}
-  \begin{center}
-    \Large \btext{Scheduling in business processes is fundamentally non-local.}
-  \end{center}
-  \vspace{0.15cm}
-  \smallref{Figure: IJCAI'25 BPSP results report up to \(\sim\)4 hours makespan reduction on big days.}
 \end{frame}
 
 % CORE
@@ -691,9 +676,9 @@
 \end{frame}
 
 % ==========================================================
-% 4) Valuation and synchronization externalities (third perspective; climax in long version)
+% 4) Valuation and synchronization externalities (capstone)
 % ==========================================================
-\section{3) Fork--join synchronization creates externalities (valuation perspective)}
+\section{3) Fork--join synchronization creates externalities (valuation capstone)}
 
 % CORE — OR example
 \begin{frame}{Claim: FIFO is locally fair but globally inefficient at OR joins}
@@ -736,7 +721,7 @@
         \node[draw=badred, very thick, rounded corners, fit=(join), inner sep=4pt] {};
       \end{tikzpicture}
       \vspace{0.05cm}
-      \smallref{OR join couples queues \(B\) and \(C\). This structure generalizes beyond DayHospital to any workflow with partial synchronization.}
+      \smallref{OR join couples queues \(B\) and \(C\).}
 
     \column{0.45\textwidth}
       \begin{block}{Externality}
@@ -753,17 +738,12 @@
 % CORE for TU/e: stop valuation here (at most one intuition slide)
 \iflong\else
 % CORE
-\begin{frame}{TU/e takeaway: fork--join demands case-aware scheduling}
-  \begin{block}{The problem}
+\begin{frame}{TU/e takeaway: fork--join makes ``fair'' local rules globally wrong}
+  \begin{block}{One-sentence conclusion}
     Synchronization introduces \btext{delay externalities} that cannot be fixed by tuning local priorities.
   \end{block}
-  \vspace{0.1cm}
-  \begin{block}{The solution direction (high level)}
-    Each case reports a \btext{value-of-time} function \(v_i(t)\); scheduling maximizes aggregate welfare.
-    \btext{VCG-style payments} price the externalities—deviations from FIFO are justified by urgency, not arbitrary.
-  \end{block}
-  \vspace{0.1cm}
-  \smallref{Full mechanism + experiments in the TUM version and the IJCAI'26 valuation paper draft.}
+  \vspace{0.15cm}
+  \btext{TUM extension:} valuation-aware scheduling internalizes these externalities via pricing.
 \end{frame}
 \fi
 
